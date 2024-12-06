@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/AuthContext"
 import Image from "next/image"
 import { productsService } from "@/lib/services/products"
+import { Camera, X } from "lucide-react"
 
 const categories = [
   "Clothing",
@@ -42,11 +43,16 @@ export default function SellPage() {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
-    setImages(files)
+    setImages(prev => [...prev, ...files])
+    
+    // Create preview URLs for new images
+    const newPreviews = files.map(file => URL.createObjectURL(file))
+    setPreviews(prev => [...prev, ...newPreviews])
+  }
 
-    // Create preview URLs
-    const urls = files.map(file => URL.createObjectURL(file))
-    setPreviews(urls)
+  const removeImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index))
+    setPreviews(prev => prev.filter((_, i) => i !== index))
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -63,20 +69,16 @@ export default function SellPage() {
 
     try {
       setLoading(true)
-      setError("")
-
       await productsService.create({
         ...formData,
         price: parseFloat(formData.price),
         sellerId: user.uid,
-        status: 'available',
-        imageUrls: []
+        status: "available"
       }, images)
-
       router.push("/dashboard")
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error creating product:", error)
-      setError(error.message || "Failed to create product")
+      setError("Failed to create product")
     } finally {
       setLoading(false)
     }
@@ -89,39 +91,44 @@ export default function SellPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">List an Item for Sale</h1>
-        
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
-        )}
+      <h1 className="text-2xl font-bold mb-8">List an Item</h1>
 
+      <div className="max-w-2xl mx-auto">
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Image Upload */}
           <div>
-            <label className="block mb-2 font-semibold">Images</label>
-            <input
-              type="file"
-              onChange={handleImageChange}
-              multiple
-              accept="image/*"
-              className="w-full"
-            />
-            {previews.length > 0 && (
-              <div className="mt-4 grid grid-cols-3 gap-4">
-                {previews.map((url, index) => (
-                  <div key={index} className="relative aspect-square">
-                    <Image
-                      src={url}
-                      alt={`Preview ${index + 1}`}
-                      fill
-                      className="object-cover rounded"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
+            <label className="block mb-2 font-semibold">Images (up to 5)</label>
+            <div className="grid grid-cols-3 md:grid-cols-5 gap-4 mb-4">
+              {previews.map((url, index) => (
+                <div key={url} className="relative aspect-square">
+                  <Image
+                    src={url}
+                    alt={`Preview ${index + 1}`}
+                    fill
+                    className="object-cover rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(index)}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              ))}
+              {previews.length < 5 && (
+                <label className="aspect-square border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-purple-600">
+                  <Camera className="mb-2" />
+                  <span className="text-sm text-gray-600">Add Image</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
           </div>
 
           <div>

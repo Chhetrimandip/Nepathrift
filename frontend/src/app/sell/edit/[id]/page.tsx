@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation"
 import { useAuth } from "@/contexts/AuthContext"
 import Image from "next/image"
 import { productsService, Product } from "@/lib/services/products"
-import { Camera } from "lucide-react"
+import { Camera, X } from "lucide-react"
 
 const categories = [
   "Clothing",
@@ -85,11 +85,26 @@ export default function EditProductPage() {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
-    setNewImages(files)
+    setNewImages(prev => [...prev, ...files])
     
     // Create preview URLs for new images
     const newPreviews = files.map(file => URL.createObjectURL(file))
     setPreviews(prev => [...prev, ...newPreviews])
+  }
+
+  const removeImage = (index: number) => {
+    // If it's an existing image
+    if (index < (product?.imageUrls.length || 0)) {
+      const updatedUrls = product?.imageUrls.filter((_, i) => i !== index) || []
+      setProduct(prev => prev ? { ...prev, imageUrls: updatedUrls } : null)
+      setPreviews(prev => prev.filter((_, i) => i !== index))
+    } 
+    // If it's a new image
+    else {
+      const newIndex = index - (product?.imageUrls.length || 0)
+      setNewImages(prev => prev.filter((_, i) => i !== newIndex))
+      setPreviews(prev => prev.filter((_, i) => i !== index))
+    }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -109,7 +124,7 @@ export default function EditProductPage() {
       await productsService.update(params.id as string, {
         ...formData,
         price: parseFloat(formData.price),
-        sellerId: user.uid,
+        imageUrls: product.imageUrls // Pass current imageUrls
       }, newImages)
       router.push("/dashboard")
     } catch (error) {
@@ -149,8 +164,8 @@ export default function EditProductPage() {
       <form onSubmit={handleSubmit} className="max-w-2xl mx-auto">
         {/* Image Upload */}
         <div className="mb-6">
-          <label className="block mb-2 font-semibold">Images</label>
-          <div className="grid grid-cols-4 gap-4 mb-4">
+          <label className="block mb-2 font-semibold">Images (up to 5)</label>
+          <div className="grid grid-cols-3 md:grid-cols-5 gap-4 mb-4">
             {previews.map((url, index) => (
               <div key={url} className="relative aspect-square">
                 <Image
@@ -159,20 +174,28 @@ export default function EditProductPage() {
                   fill
                   className="object-cover rounded-lg"
                 />
+                <button
+                  type="button"
+                  onClick={() => removeImage(index)}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                >
+                  <X size={16} />
+                </button>
               </div>
             ))}
+            {previews.length < 5 && (
+              <label className="aspect-square border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-purple-600">
+                <Camera className="mb-2" />
+                <span className="text-sm text-gray-600">Add Image</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+              </label>
+            )}
           </div>
-          <label className="block w-full p-4 border-2 border-dashed rounded-lg text-center cursor-pointer hover:border-purple-600">
-            <Camera className="mx-auto mb-2" />
-            <span className="text-sm text-gray-600">Add More Images</span>
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={handleImageChange}
-              className="hidden"
-            />
-          </label>
         </div>
 
         {/* Form Fields */}
