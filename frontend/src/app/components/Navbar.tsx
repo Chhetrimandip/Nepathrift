@@ -2,21 +2,12 @@
 
 import Link from "next/link"
 import { useAuth } from "@/contexts/AuthContext"
-import { useRouter } from "next/navigation"
+import { useCart } from "@/contexts/CartContext"
+import { ShoppingCart } from "lucide-react"
 
 export default function Navbar() {
   const { user, signOut } = useAuth()
-  const router = useRouter()
-
-  const handleLogout = async () => {
-    try {
-      await signOut()
-      router.push("/")
-      window.location.reload()
-    } catch (error) {
-      console.error("Error logging out:", error)
-    }
-  }
+  const { itemCount } = useCart()
 
   return (
     <nav className="bg-white shadow-md">
@@ -26,37 +17,44 @@ export default function Navbar() {
             Nepathrift
           </Link>
 
-          <div className="flex items-center space-x-4">
-            <Link href="/shop" className="text-gray-700 hover:text-purple-600">
+          <div className="flex items-center space-x-6">
+            <Link href="/shop" className="hover:text-purple-600">
               Shop
             </Link>
-            
+            <Link href="/sell" className="hover:text-purple-600">
+              Sell
+            </Link>
+            <Link href="/about" className="hover:text-purple-600">
+              About
+            </Link>
             {user ? (
               <>
-                <Link href="/sell" className="text-gray-700 hover:text-purple-600">
-                  Sell
-                </Link>
-                <Link href="/dashboard" className="text-gray-700 hover:text-purple-600">
+                <Link href="/dashboard" className="hover:text-purple-600">
                   Dashboard
                 </Link>
-                <Link href="/profile" className="text-gray-700 hover:text-purple-600">
-                  Profile
-                </Link>
                 <button
-                  onClick={handleLogout}
-                  className="text-gray-700 hover:text-purple-600"
+                  onClick={signOut}
+                  className="hover:text-purple-600"
                 >
-                  Logout
+                  Sign Out
                 </button>
               </>
             ) : (
-              <Link 
+              <Link
                 href="/auth/signin"
-                className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
+                className="hover:text-purple-600"
               >
                 Sign In
               </Link>
             )}
+            <Link href="/cart" className="relative hover:text-purple-600">
+              <ShoppingCart size={24} />
+              {itemCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-purple-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {itemCount}
+                </span>
+              )}
+            </Link>
           </div>
         </div>
       </div>

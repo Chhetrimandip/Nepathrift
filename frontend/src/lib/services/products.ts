@@ -1,6 +1,6 @@
 import { storage, db } from "@/lib/firebase"
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
-import { collection, addDoc, query, where, getDocs, deleteDoc, doc } from "firebase/firestore"
+import { collection, addDoc, query, where, getDocs, deleteDoc, doc, getDoc, setDoc } from "firebase/firestore"
 
 export interface Product {
   id?: string
@@ -65,5 +65,44 @@ export const productsService = {
       id: doc.id,
       ...doc.data()
     })) as Product[]
+  },
+
+  async getById(productId: string) {
+    const docRef = doc(db, "products", productId)
+    const docSnap = await getDoc(docRef)
+    
+    if (!docSnap.exists()) {
+      return null
+    }
+
+    return {
+      id: docSnap.id,
+      ...docSnap.data()
+    } as Product
+  },
+
+  async update(productId: string, data: Partial<Product>, newImages?: File[]) {
+    const docRef = doc(db, "products", productId)
+    
+    let imageUrls = data.imageUrls || []
+    
+    if (newImages && newImages.length > 0) {
+      // Upload new images
+      for (const image of newImages) {
+        const storageRef = ref(storage, `products/${Date.now()}-${image.name}`)
+        await uploadBytes(storageRef, image)
+        const url = await getDownloadURL(storageRef)
+        imageUrls.push(url)
+      }
+    }
+
+    const updateData = {
+      ...data,
+      imageUrls,
+      updatedAt: new Date()
+    }
+
+    await setDoc(docRef, updateData, { merge: true })
+    return productId
   }
 } 
