@@ -1,8 +1,9 @@
 import { storage, db } from "@/lib/firebase"
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
-import { collection, addDoc } from "firebase/firestore"
+import { collection, addDoc, query, where, getDocs, deleteDoc, doc } from "firebase/firestore"
 
-interface ProductData {
+export interface Product {
+  id?: string
   name: string
   description: string
   price: number
@@ -11,12 +12,13 @@ interface ProductData {
   size: string
   brand: string
   sellerId: string
-  status: string
+  status: 'available' | 'sold' | 'pending'
   imageUrls: string[]
+  createdAt: Date
 }
 
 export const productsService = {
-  async create(data: ProductData, images: File[]) {
+  async create(data: Omit<Product, 'id' | 'createdAt'>, images: File[]) {
     const imageUrls = []
     
     // Upload images
@@ -32,9 +34,27 @@ export const productsService = {
       ...data,
       imageUrls,
       createdAt: new Date(),
+      status: 'available'
     }
 
     const docRef = await addDoc(collection(db, "products"), productData)
     return docRef.id
+  },
+
+  async getBySeller(sellerId: string) {
+    const q = query(
+      collection(db, "products"),
+      where("sellerId", "==", sellerId)
+    )
+    
+    const snapshot = await getDocs(q)
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Product[]
+  },
+
+  async delete(productId: string) {
+    await deleteDoc(doc(db, "products", productId))
   }
 } 
