@@ -81,9 +81,19 @@ export default function ProfilePage() {
     try {
       setUploading(true)
       const storage = getStorage()
-      const storageRef = ref(storage, `profile-images/${user.uid}/${file.name}`)
       
-      await uploadBytes(storageRef, file)
+      // Create a storage reference with a unique filename
+      const fileExtension = file.name.split('.').pop()
+      const fileName = `${Date.now()}.${fileExtension}`
+      const storageRef = ref(storage, `profile-images/${user.uid}/${fileName}`)
+      
+      // Set the appropriate metadata including content type
+      const metadata = {
+        contentType: file.type,
+        cacheControl: 'public,max-age=7200'
+      }
+
+      await uploadBytes(storageRef, file, metadata)
       const downloadURL = await getDownloadURL(storageRef)
       
       setProfile(prev => ({
@@ -151,19 +161,35 @@ export default function ProfilePage() {
         </div>
 
         <div className="mb-6 flex justify-center">
-          <div className="relative w-32 h-32 rounded-full overflow-hidden">
-            <Image
-              src={profile.photoURL || "/default-avatar.png"}
-              alt="Profile"
-              fill
-              className="object-cover"
+          <div className="relative w-32 h-32 group">
+            <div className="relative w-full h-full rounded-full overflow-hidden">
+              <Image
+                src={profile.photoURL || "/default-avatar.png"}
+                alt="Profile"
+                fill
+                className="object-cover"
+              />
+              {isEditing && (
+                <div 
+                  onClick={handleImageClick}
+                  className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Camera className="w-8 h-8 text-white" />
+                </div>
+              )}
+            </div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageChange}
+              accept="image/*"
+              className="hidden"
             />
-            <button
-              onClick={handleImageClick}
-              className="absolute inset-0 flex items-center justify-center text-gray-500 hover:text-gray-700"
-            >
-              <Camera className="h-6 w-6" />
-            </button>
+            {uploading && (
+              <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+              </div>
+            )}
           </div>
         </div>
 
