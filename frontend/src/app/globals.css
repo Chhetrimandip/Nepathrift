@@ -37,17 +37,19 @@
   animation: rotateMandala 20s linear infinite;
 }
 
-.floating-cutout {
+/* Temporarily disable floating animation */
+/* .floating-cutout {
   animation: float 5s ease-in-out infinite;
-}
+} */
 
 @keyframes rotateMandala {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
-@keyframes float {
+/* Keep this for later use */
+/* @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-20px); }
-}
+} */
 
