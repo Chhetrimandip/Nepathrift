@@ -56,5 +56,14 @@ export const productsService = {
 
   async delete(productId: string) {
     await deleteDoc(doc(db, "products", productId))
+  },
+
+  async getAll() {
+    const q = query(collection(db, "products"), where("status", "==", "available"))
+    const snapshot = await getDocs(q)
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Product[]
   }
 } 
