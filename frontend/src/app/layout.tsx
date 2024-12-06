@@ -5,7 +5,7 @@ import Navbar from "./components/Navbar"
 import DynamicBackground from "./components/DynamicBackground"
 import FloatingFashionCutouts from "./components/FloatingFashionCutouts"
 import Footer from "./components/Footer"
-import "./globals.css"
+import "@/app/globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -36,4 +36,5 @@ export default function RootLayout({
       </body>
     </html>
   )
-} 
+}
+
