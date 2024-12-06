@@ -20,15 +20,48 @@ const DynamicBackground = () => {
     setCanvasSize()
     window.addEventListener("resize", setCanvasSize)
 
-    // Create gradient background
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height)
-    gradient.addColorStop(0, "#ffffff")
-    gradient.addColorStop(1, "#f3f4f6")
+    // Mandala parameters
+    const mandalas = Array.from({ length: 5 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      size: Math.random() * 100 + 50,
+      rotation: 0,
+      speed: Math.random() * 0.001,
+      opacity: Math.random() * 0.1,
+    }))
 
-    // Animation function
+    const drawMandala = (x: number, y: number, size: number, rotation: number, opacity: number) => {
+      ctx.save()
+      ctx.translate(x, y)
+      ctx.rotate(rotation)
+      ctx.globalAlpha = opacity
+
+      // Draw mandala pattern
+      ctx.beginPath()
+      for (let i = 0; i < 8; i++) {
+        ctx.rotate(Math.PI / 4)
+        ctx.moveTo(0, 0)
+        ctx.bezierCurveTo(size/2, size/2, size, size/2, size, 0)
+      }
+      ctx.strokeStyle = "#6B46C1"
+      ctx.stroke()
+      ctx.restore()
+    }
+
     const animate = () => {
-      ctx.fillStyle = gradient
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+      mandalas.forEach(mandala => {
+        mandala.rotation += mandala.speed
+        drawMandala(
+          mandala.x,
+          mandala.y,
+          mandala.size,
+          mandala.rotation,
+          mandala.opacity
+        )
+      })
+
       requestAnimationFrame(animate)
     }
 
@@ -42,8 +75,7 @@ const DynamicBackground = () => {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 -z-10"
-      style={{ opacity: 0.8 }}
+      className="fixed inset-0 -z-10 bg-gradient-to-br from-purple-50 to-indigo-50"
     />
   )
 }
