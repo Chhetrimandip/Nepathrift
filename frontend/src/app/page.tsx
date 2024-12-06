@@ -31,25 +31,7 @@ export default function HomePage() {
           </div>
         </div>
         
-        {/* Floating Fashion Images */}
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 hidden lg:block">
-          <div className="relative w-[500px] h-[600px]">
-            <Image
-              src="/fashion-cutout-1.png"
-              alt="Fashion Item"
-              width={300}
-              height={400}
-              className="absolute top-0 right-0 animate-float-slow"
-            />
-            <Image
-              src="/fashion-cutout-2.png"
-              alt="Fashion Item"
-              width={250}
-              height={350}
-              className="absolute bottom-0 left-0 animate-float-slower"
-            />
-          </div>
-        </div>
+
       </section>
 
       <MandalaDivider />

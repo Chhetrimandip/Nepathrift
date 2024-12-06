@@ -12,7 +12,6 @@ export default function MandalaBackground() {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    // Set canvas size
     const setCanvasSize = () => {
       canvas.width = window.innerWidth
       canvas.height = window.innerHeight
@@ -20,11 +19,9 @@ export default function MandalaBackground() {
     setCanvasSize()
     window.addEventListener('resize', setCanvasSize)
 
-    // Mandala animation
     let rotation = 0
     const mandalas: { x: number; y: number; size: number; speed: number }[] = []
     
-    // Create multiple mandalas
     for (let i = 0; i < 5; i++) {
       mandalas.push({
         x: Math.random() * canvas.width,
@@ -47,7 +44,10 @@ export default function MandalaBackground() {
         ctx.arc(size, 0, size/4, 0, Math.PI * 2)
       }
       
-      ctx.strokeStyle = 'rgba(147, 51, 234, 0.1)' // Purple with low opacity
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+      ctx.strokeStyle = isDark 
+        ? 'rgba(147, 51, 234, 0.4)' // Much darker for dark mode
+        : 'rgba(147, 51, 234, 0.25)'  // Much darker for light mode
       ctx.stroke()
       ctx.restore()
     }
@@ -58,7 +58,6 @@ export default function MandalaBackground() {
       mandalas.forEach(mandala => {
         drawMandala(mandala.x, mandala.y, mandala.size, rotation * mandala.speed)
         
-        // Move mandalas
         mandala.y += 0.5
         if (mandala.y > canvas.height + mandala.size) {
           mandala.y = -mandala.size
@@ -72,8 +71,18 @@ export default function MandalaBackground() {
 
     animate()
 
+    const observer = new MutationObserver(() => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+    })
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme']
+    })
+
     return () => {
       window.removeEventListener('resize', setCanvasSize)
+      observer.disconnect()
     }
   }, [])
 

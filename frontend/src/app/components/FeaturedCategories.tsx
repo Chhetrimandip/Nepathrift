@@ -16,7 +16,7 @@ export default function FeaturedCategories() {
           <Link
             key={category.name}
             href={`/shop/${category.name.toLowerCase()}`}
-            className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center group"
+            className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center group"
           >
             <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">
               {category.icon}
