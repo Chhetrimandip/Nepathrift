@@ -5,13 +5,14 @@ import { useAuth } from "@/contexts/AuthContext"
 import { useRouter } from "next/navigation"
 
 export default function Navbar() {
-  const { user, logout } = useAuth()
+  const { user, signOut } = useAuth()
   const router = useRouter()
 
   const handleLogout = async () => {
     try {
-      await logout()
+      await signOut()
       router.push("/")
+      window.location.reload()
     } catch (error) {
       console.error("Error logging out:", error)
     }

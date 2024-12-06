@@ -1,25 +1,40 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export function middleware(request: NextRequest) {
-  const token = request.cookies.get('firebase-token')
+export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
   
   // Paths that require authentication
   const protectedPaths = ['/dashboard', '/sell']
   
+  // Public paths that should bypass auth check
+  const publicPaths = ['/auth/signin', '/auth/signup', '/']
+  
+  // If it's a public path, allow access
+  if (publicPaths.some(prefix => path.startsWith(prefix))) {
+    return NextResponse.next()
+  }
+
   // Check if the current path is protected
   if (protectedPaths.some(prefix => path.startsWith(prefix))) {
-    if (!token) {
-      // Redirect to sign in if no token is present
-      return NextResponse.redirect(new URL('/auth/signin', request.url))
+    // Get the Firebase auth session cookie
+    const session = request.cookies.get('__session')
+    
+    if (!session) {
+      // Redirect to sign in if no session is present
+      const signInUrl = new URL('/auth/signin', request.url)
+      signInUrl.searchParams.set('redirect', path)
+      return NextResponse.redirect(signInUrl)
     }
   }
 
   return NextResponse.next()
 }
 
-// Update the matcher to include all protected paths
 export const config = {
-  matcher: ['/dashboard/:path*', '/sell/:path*']
+  matcher: [
+    '/dashboard/:path*', 
+    '/sell/:path*',
+    '/auth/:path*'
+  ]
 }

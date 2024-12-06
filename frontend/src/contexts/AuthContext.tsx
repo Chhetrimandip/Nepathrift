@@ -44,7 +44,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      console.log("Attempting sign in...");
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      console.log("Sign in successful:", result.user);
+      
+      // Get the ID token
+      const idToken = await result.user.getIdToken();
+      
+      // Set the session cookie
+      document.cookie = `__session=${idToken}; path=/; max-age=3600; secure; samesite=strict`;
+      
+      setUser(result.user);
+      return result;
     } catch (error) {
       console.error("Sign in error:", error);
       throw error;
@@ -54,6 +65,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       await signOut(auth);
+      // Clear the session cookie
+      document.cookie = '__session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
+      setUser(null);
     } catch (error) {
       console.error("Sign out error:", error);
       throw error;

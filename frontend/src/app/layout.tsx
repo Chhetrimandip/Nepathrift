@@ -5,14 +5,12 @@ import Navbar from "./components/Navbar"
 import DynamicBackground from "./components/DynamicBackground"
 import FloatingFashionCutouts from "./components/FloatingFashionCutouts"
 import Footer from "./components/Footer"
+import { metadata } from "./metadata"
 import "@/app/globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
 
-export const metadata = {
-  title: "Nepathrift - Modern Thrift Store",
-  description: "Discover unique, sustainable fashion at Nepathrift",
-}
+export { metadata }
 
 export default function RootLayout({
   children,
