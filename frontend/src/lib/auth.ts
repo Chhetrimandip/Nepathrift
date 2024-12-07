@@ -1,4 +1,4 @@
-import { auth } from './firebase';
+import { auth } from './firebase-client';
 import { User } from 'firebase/auth';
 
 export async function getAuthUser(): Promise<User | null> {

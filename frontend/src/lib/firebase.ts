@@ -26,14 +26,20 @@ export function getFirebaseApp() {
     } catch (error) {
       console.error('Firebase initialization error:', error)
       console.log('Firebase config:', firebaseConfig)
+      throw new Error('Failed to initialize Firebase')
     }
   }
   return firebase_app
 }
 
-export const auth = getAuth(getFirebaseApp())
-export const db = getFirestore(getFirebaseApp())
-export const functions = getFunctions(getFirebaseApp())
-export const storage = getStorage(getFirebaseApp())
+const app = getFirebaseApp()
+if (!app) {
+  throw new Error('Firebase app not initialized')
+}
 
-export default getFirebaseApp()
+export const auth = getAuth(app)
+export const db = getFirestore(app)
+export const functions = getFunctions(app)
+export const storage = getStorage(app)
+
+export default app
