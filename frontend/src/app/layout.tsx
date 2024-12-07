@@ -25,11 +25,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={`${roboto.className} bg-gray-50 dark:bg-gray-900 relative min-h-screen flex flex-col`}>
+    <html lang="en" data-theme="light">
+      <body className={`${roboto.className} bg-white dark:bg-gray-900 min-h-screen flex flex-col`}>
         <AuthProvider>
           <CartProvider>
-            <DynamicBackground />
             <Navbar />
             <div className="relative z-10 flex-grow">
               {children}

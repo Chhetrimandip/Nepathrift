@@ -22,13 +22,13 @@ export default function HomePage() {
     <>
       
       {/* Hero Section */}
-      <section className="relative min-h-[70vh] flex items-center">
+      <section className="relative min-h-[70vh] flex items-center bg-white dark:bg-gray-900">
         <div className="container mx-auto px-4 py-12">
           <div className="max-w-2xl">
-            <h1 className={`${playfair.className} text-5xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600`}>
+            <h1 className={`${playfair.className} text-5xl md:text-6xl font-bold mb-6 text-gray-800 dark:text-gray-100`}>
               Discover Unique Fashion Treasures
             </h1>
-            <p className="text-xl text-blue-800 dark:text-blue-800 mb-8">
+            <p className="text-xl text-gray-700 dark:text-gray-300 mb-8 font-medium">
               Where style meets sustainability. Find pre-loved fashion pieces that tell a story.
             </p>
             <Link
@@ -44,7 +44,7 @@ export default function HomePage() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-8 bg-white dark:bg-gray-800">
+      <section className="py-8 bg-gray-50 dark:bg-gray-800">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-3 gap-8">
             <div className="text-center">
@@ -69,12 +69,12 @@ export default function HomePage() {
 
 
       {/* Featured Categories */}
-      <section className="relative py-8">
+      <section className="relative py-8 bg-gray-50 dark:bg-gray-800">
         <FeaturedCategories />
       </section>
 
       {/* Featured Items */}
-      <section className="relative">
+      <section className="relative bg-white dark:bg-gray-900 py-8">
         <ItemGrid />
       </section>
 

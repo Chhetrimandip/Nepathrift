@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect } from "react"
+import { useAuth } from "./AuthContext"
 
 interface CartItem {
   id: string
@@ -17,54 +18,61 @@ interface CartContextType {
   removeFromCart: (itemId: string) => void
   updateQuantity: (itemId: string, quantity: number) => void
   clearCart: () => void
-  itemCount: number
   total: number
 }
 
-const CartContext = createContext<CartContextType | undefined>(undefined)
+export const CartContext = createContext<CartContextType | null>(null)
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [isClient, setIsClient] = useState(false)
   const [cart, setCart] = useState<CartItem[]>([])
-
+  const { user } = useAuth()
+  
+  // Load cart data with user-specific key
   useEffect(() => {
-    setIsClient(true)
-    const savedCart = localStorage.getItem('cart')
-    if (savedCart) {
-      setCart(JSON.parse(savedCart))
+    if (user) {
+      const savedCart = localStorage.getItem(`cart_${user.uid}`)
+      if (savedCart) {
+        setCart(JSON.parse(savedCart))
+      } else {
+        setCart([]) // Clear cart if no saved data for this user
+      }
+    } else {
+      setCart([]) // Clear cart when no user is logged in
     }
-  }, [])
+  }, [user]) // Depend on user to reload cart when user changes
 
+  // Save cart data with user-specific key
   useEffect(() => {
-    if (isClient) {
-      localStorage.setItem('cart', JSON.stringify(cart))
+    if (user) {
+      localStorage.setItem(`cart_${user.uid}`, JSON.stringify(cart))
     }
-  }, [cart, isClient])
+  }, [cart, user])
 
   const addToCart = (item: CartItem) => {
+    if (!user) return // Prevent adding to cart if not logged in
     setCart(prevCart => {
       const existingItem = prevCart.find(
         i => i.id === item.id && i.size === item.size
       )
-
       if (existingItem) {
         return prevCart.map(i =>
           i.id === item.id && i.size === item.size
-            ? { ...i, quantity: i.quantity + item.quantity }
+            ? { ...i, quantity: i.quantity + 1 }
             : i
         )
       }
-
       return [...prevCart, item]
     })
   }
 
+  // Other cart functions remain the same but should check for user
   const removeFromCart = (itemId: string) => {
+    if (!user) return
     setCart(prevCart => prevCart.filter(item => item.id !== itemId))
   }
 
   const updateQuantity = (itemId: string, quantity: number) => {
-    if (quantity < 1) return
+    if (!user) return
     setCart(prevCart =>
       prevCart.map(item =>
         item.id === itemId ? { ...item, quantity } : item
@@ -73,25 +81,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }
 
   const clearCart = () => {
+    if (!user) return
     setCart([])
   }
 
-  const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
-  const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-
-  if (!isClient) {
-    return null
-  }
+  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
 
   return (
-    <CartContext.Provider value={{
-      cart,
-      addToCart,
-      removeFromCart,
-      updateQuantity,
-      clearCart,
-      itemCount,
-      total
+    <CartContext.Provider value={{ 
+      cart, 
+      addToCart, 
+      removeFromCart, 
+      updateQuantity, 
+      clearCart, 
+      total 
     }}>
       {children}
     </CartContext.Provider>

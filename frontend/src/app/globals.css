@@ -4,12 +4,12 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #000000;
+  --foreground: #1a1a1a;
   --radius: 0.5rem;
 }
 
 [data-theme='dark'] {
-  --background: #000000;
+  --background: #111827;
   --foreground: #ffffff;
 }
 
@@ -20,7 +20,7 @@
   
   body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: var(--background);
+    @apply bg-white dark:bg-gray-900;
     color: var(--foreground);
     transition: background-color 0.3s ease, color 0.3s ease;
   }
