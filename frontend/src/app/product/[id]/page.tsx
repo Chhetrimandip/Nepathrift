@@ -6,6 +6,13 @@ import Image from "next/image"
 import { useCart } from "@/contexts/CartContext"
 import { productsService, Product } from "@/lib/services/products"
 import Link from "next/link"
+import { Playfair_Display, Poppins } from "next/font/google"
+
+const playfair = Playfair_Display({ subsets: ["latin"] })
+const poppins = Poppins({ 
+  weight: ['400', '600'],
+  subsets: ["latin"] 
+})
 
 export default function ProductPage() {
   const params = useParams()
@@ -76,7 +83,7 @@ export default function ProductPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+      <div className="grid md:grid-cols-2 gap-8">
         {/* Image Gallery */}
         <div className="space-y-4">
           <div className="relative aspect-square">
@@ -110,25 +117,33 @@ export default function ProductPage() {
 
         {/* Product Info */}
         <div>
-          <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
-          <p className="text-2xl text-purple-600 mb-4">${product.price.toFixed(2)}</p>
+          <h1 className={`${playfair.className} text-3xl font-bold mb-4 text-gray-800 dark:text-gray-100`}>
+            {product.name}
+          </h1>
+          <p className={`${poppins.className} text-2xl text-purple-600 mb-4`}>
+            ${product.price.toFixed(2)}
+          </p>
           
           <div className="space-y-4 mb-6">
-            <p className="text-gray-600">{product.description}</p>
-            <p><span className="font-semibold">Condition:</span> {product.condition}</p>
-            <p><span className="font-semibold">Brand:</span> {product.brand}</p>
+            <p className="text-gray-600 dark:text-gray-300">{product.description}</p>
+            <p className={`${poppins.className}`}>
+              <span className="font-semibold">Condition:</span> {product.condition}
+            </p>
+            <p className={`${poppins.className}`}>
+              <span className="font-semibold">Brand:</span> {product.brand}
+            </p>
           </div>
 
           <div className="mb-6">
-            <label className="block font-semibold mb-2">Size</label>
+            <h3 className={`${poppins.className} font-semibold mb-2`}>Select Size</h3>
             <select
               value={selectedSize}
               onChange={(e) => setSelectedSize(e.target.value)}
-              className="w-full p-2 border rounded-md"
+              className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600"
               required
             >
-              <option value="">Select Size</option>
-              <option value={product.size}>{product.size}</option>
+              <option value="" className="text-gray-500 dark:text-gray-400">Select Size</option>
+              <option value={product.size} className="text-gray-800 dark:text-gray-200">{product.size}</option>
             </select>
           </div>
 
@@ -136,15 +151,15 @@ export default function ProductPage() {
             <button
               onClick={handleAddToCart}
               disabled={!selectedSize}
-              className="bg-purple-600 text-white px-6 py-2 rounded-full font-semibold 
-                hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`${poppins.className} bg-purple-600 text-white px-6 py-2 rounded-full font-semibold 
+                hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               Add to Cart
             </button>
             <Link
               href={`/checkout?productId=${product.id}`}
-              className="border-2 border-purple-600 text-purple-600 px-6 py-2 rounded-full 
-                font-semibold hover:bg-purple-600 hover:text-white transition-colors"
+              className={`${poppins.className} border-2 border-purple-600 text-purple-600 px-6 py-2 rounded-full 
+                font-semibold hover:bg-purple-600 hover:text-white transition-colors`}
             >
               Buy Now
             </Link>

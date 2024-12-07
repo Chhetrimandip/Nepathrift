@@ -1,12 +1,24 @@
+import { Playfair_Display, Poppins } from "next/font/google"
+
+const playfair = Playfair_Display({ subsets: ["latin"] })
+const poppins = Poppins({ 
+  weight: ['600'],
+  subsets: ["latin"] 
+})
+
 export default function AboutPage() {
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold mb-8">About Nepathrift</h1>
+      <h1 className={`${playfair.className} text-4xl font-bold mb-8 text-gray-800 dark:text-gray-100`}>
+        About Nepathrift
+      </h1>
       
       <div className="prose max-w-none">
         <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Our Mission</h2>
-          <p className="text-gray-600 mb-4">
+          <h2 className={`${poppins.className} text-2xl font-semibold mb-4 text-purple-600 dark:text-purple-400`}>
+            Our Mission
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300 mb-4">
             At Nepathrift, we're revolutionizing the way people think about second-hand fashion. 
             Our mission is to make sustainable fashion accessible to everyone while reducing textile waste 
             and supporting local communities.

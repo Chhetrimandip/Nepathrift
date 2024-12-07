@@ -6,6 +6,13 @@ import { useAuth } from "@/contexts/AuthContext"
 import Image from "next/image"
 import { productsService } from "@/lib/services/products"
 import { Camera, X } from "lucide-react"
+import { Playfair_Display, Poppins } from "next/font/google"
+
+const playfair = Playfair_Display({ subsets: ["latin"] })
+const poppins = Poppins({ 
+  weight: ['400', '600'],
+  subsets: ["latin"] 
+})
 
 const categories = [
   "Clothing",
@@ -91,7 +98,9 @@ export default function SellPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-8">List an Item</h1>
+      <h1 className={`${playfair.className} text-3xl font-bold mb-6 text-gray-800 dark:text-gray-100`}>
+        Sell Your Item
+      </h1>
 
       <div className="max-w-2xl mx-auto">
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -132,32 +141,38 @@ export default function SellPage() {
           </div>
 
           <div>
-            <label className="block mb-2 font-semibold">Title</label>
+            <label className={`${poppins.className} block text-gray-700 dark:text-gray-200 mb-2`}>
+              Title
+            </label>
             <input
               type="text"
               name="name"
               value={formData.name}
               onChange={handleChange}
               required
-              className="w-full rounded-md"
+              className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600"
             />
           </div>
 
           <div>
-            <label className="block mb-2 font-semibold">Description</label>
+            <label className={`${poppins.className} block text-gray-700 dark:text-gray-200 mb-2`}>
+              Description
+            </label>
             <textarea
               name="description"
               value={formData.description}
               onChange={handleChange}
               required
               rows={4}
-              className="w-full rounded-md"
+              className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block mb-2 font-semibold">Price</label>
+              <label className={`${poppins.className} block text-gray-700 dark:text-gray-200 mb-2`}>
+                Price
+              </label>
               <input
                 type="number"
                 name="price"
@@ -166,40 +181,44 @@ export default function SellPage() {
                 required
                 min="0"
                 step="0.01"
-                className="w-full rounded-md"
+                className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600"
               />
             </div>
 
             <div>
-              <label className="block mb-2 font-semibold">Category</label>
+              <label className={`${poppins.className} block text-gray-700 dark:text-gray-200 mb-2`}>
+                Category
+              </label>
               <select
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
                 required
-                className="w-full rounded-md"
+                className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600"
               >
-                <option value="">Select category</option>
-                {categories.map(category => (
-                  <option key={category} value={category.toLowerCase()}>
-                    {category}
+                <option value="" className="text-gray-500 dark:text-gray-400">Select Category</option>
+                {categories.map(cat => (
+                  <option key={cat} value={cat} className="text-gray-800 dark:text-gray-200">
+                    {cat}
                   </option>
                 ))}
               </select>
             </div>
 
             <div>
-              <label className="block mb-2 font-semibold">Condition</label>
+              <label className={`${poppins.className} block text-gray-700 dark:text-gray-200 mb-2`}>
+                Condition
+              </label>
               <select
                 name="condition"
                 value={formData.condition}
                 onChange={handleChange}
                 required
-                className="w-full rounded-md"
+                className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600"
               >
-                <option value="">Select condition</option>
+                <option value="" className="text-gray-500 dark:text-gray-400">Select Condition</option>
                 {conditions.map(condition => (
-                  <option key={condition} value={condition.toLowerCase()}>
+                  <option key={condition} value={condition} className="text-gray-800 dark:text-gray-200">
                     {condition}
                   </option>
                 ))}
@@ -207,24 +226,28 @@ export default function SellPage() {
             </div>
 
             <div>
-              <label className="block mb-2 font-semibold">Size</label>
+              <label className={`${poppins.className} block text-gray-700 dark:text-gray-200 mb-2`}>
+                Size
+              </label>
               <input
                 type="text"
                 name="size"
                 value={formData.size}
                 onChange={handleChange}
-                className="w-full rounded-md"
+                className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600"
               />
             </div>
 
             <div>
-              <label className="block mb-2 font-semibold">Brand</label>
+              <label className={`${poppins.className} block text-gray-700 dark:text-gray-200 mb-2`}>
+                Brand
+              </label>
               <input
                 type="text"
                 name="brand"
                 value={formData.brand}
                 onChange={handleChange}
-                className="w-full rounded-md"
+                className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600"
               />
             </div>
           </div>

@@ -6,6 +6,13 @@ import { useAuth } from "@/contexts/AuthContext"
 import Image from "next/image"
 import { productsService, Product } from "@/lib/services/products"
 import { Camera, X } from "lucide-react"
+import { Playfair_Display, Poppins } from "next/font/google"
+
+const playfair = Playfair_Display({ subsets: ["latin"] })
+const poppins = Poppins({ 
+  weight: ['400', '600'],
+  subsets: ["latin"] 
+})
 
 const categories = [
   "Clothing",
@@ -159,12 +166,16 @@ export default function EditProductPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-8">Edit Item</h1>
+      <h1 className={`${playfair.className} text-2xl font-bold mb-8 text-gray-800 dark:text-gray-100`}>
+        Edit Item
+      </h1>
 
       <form onSubmit={handleSubmit} className="max-w-2xl mx-auto">
         {/* Image Upload */}
         <div className="mb-6">
-          <label className="block mb-2 font-semibold">Images (up to 5)</label>
+          <label className={`${poppins.className} block mb-2 font-semibold text-gray-800 dark:text-gray-100`}>
+            Images (up to 5)
+          </label>
           <div className="grid grid-cols-3 md:grid-cols-5 gap-4 mb-4">
             {previews.map((url, index) => (
               <div key={url} className="relative aspect-square">
@@ -184,9 +195,9 @@ export default function EditProductPage() {
               </div>
             ))}
             {previews.length < 5 && (
-              <label className="aspect-square border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-purple-600">
+              <label className="aspect-square border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-purple-600 dark:hover:border-purple-400 text-gray-600 dark:text-gray-300">
                 <Camera className="mb-2" />
-                <span className="text-sm text-gray-600">Add Image</span>
+                <span className="text-sm">Add Image</span>
                 <input
                   type="file"
                   accept="image/*"
@@ -199,33 +210,39 @@ export default function EditProductPage() {
         </div>
 
         {/* Form Fields */}
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div>
-            <label className="block mb-2 font-semibold">Title</label>
+            <label className={`${poppins.className} block mb-2 font-semibold text-gray-800 dark:text-gray-100`}>
+              Title
+            </label>
             <input
               type="text"
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full rounded-md"
+              className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-600"
               required
             />
           </div>
 
           <div>
-            <label className="block mb-2 font-semibold">Description</label>
+            <label className={`${poppins.className} block mb-2 font-semibold text-gray-800 dark:text-gray-100`}>
+              Description
+            </label>
             <textarea
               name="description"
               value={formData.description}
               onChange={handleChange}
-              className="w-full rounded-md"
+              className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-600"
               rows={4}
               required
             />
           </div>
 
           <div>
-            <label className="block mb-2 font-semibold">Price</label>
+            <label className={`${poppins.className} block mb-2 font-semibold text-gray-800 dark:text-gray-100`}>
+              Price
+            </label>
             <input
               type="number"
               name="price"
@@ -233,19 +250,21 @@ export default function EditProductPage() {
               onChange={handleChange}
               step="0.01"
               min="0"
-              className="w-full rounded-md"
+              className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-600"
               required
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block mb-2 font-semibold">Category</label>
+              <label className={`${poppins.className} block mb-2 font-semibold text-gray-800 dark:text-gray-100`}>
+                Category
+              </label>
               <select
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
-                className="w-full rounded-md"
+                className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-600"
                 required
               >
                 <option value="">Select category</option>
@@ -258,12 +277,14 @@ export default function EditProductPage() {
             </div>
 
             <div>
-              <label className="block mb-2 font-semibold">Condition</label>
+              <label className={`${poppins.className} block mb-2 font-semibold text-gray-800 dark:text-gray-100`}>
+                Condition
+              </label>
               <select
                 name="condition"
                 value={formData.condition}
                 onChange={handleChange}
-                className="w-full rounded-md"
+                className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-600"
                 required
               >
                 <option value="">Select condition</option>
@@ -276,25 +297,29 @@ export default function EditProductPage() {
             </div>
 
             <div>
-              <label className="block mb-2 font-semibold">Size</label>
+              <label className={`${poppins.className} block mb-2 font-semibold text-gray-800 dark:text-gray-100`}>
+                Size
+              </label>
               <input
                 type="text"
                 name="size"
                 value={formData.size}
                 onChange={handleChange}
-                className="w-full rounded-md"
+                className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-600"
                 required
               />
             </div>
 
             <div>
-              <label className="block mb-2 font-semibold">Brand</label>
+              <label className={`${poppins.className} block mb-2 font-semibold text-gray-800 dark:text-gray-100`}>
+                Brand
+              </label>
               <input
                 type="text"
                 name="brand"
                 value={formData.brand}
                 onChange={handleChange}
-                className="w-full rounded-md"
+                className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-600"
                 required
               />
             </div>
@@ -302,21 +327,21 @@ export default function EditProductPage() {
         </div>
 
         {error && (
-          <p className="text-red-600 mt-4">{error}</p>
+          <p className="text-red-600 dark:text-red-400 mt-4">{error}</p>
         )}
 
         <div className="mt-8 flex justify-end space-x-4">
           <button
             type="button"
             onClick={() => router.back()}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800"
+            className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={saving}
-            className="bg-purple-600 text-white px-6 py-2 rounded-md hover:bg-purple-700 disabled:opacity-50"
+            className="bg-purple-600 text-white px-6 py-2 rounded-md hover:bg-purple-700 disabled:opacity-50 dark:bg-purple-500 dark:hover:bg-purple-600"
           >
             {saving ? "Saving..." : "Save Changes"}
           </button>

@@ -1,9 +1,16 @@
 "use client"
 
+import { Playfair_Display, Poppins } from "next/font/google"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { productsService, Product } from "@/lib/services/products"
+
+const playfair = Playfair_Display({ subsets: ["latin"] })
+const poppins = Poppins({ 
+  weight: ['400', '600'],
+  subsets: ["latin"] 
+})
 
 const categories = [
   "All",
@@ -51,46 +58,38 @@ export default function ShopPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Shop</h1>
-      
+      <h1 className={`${playfair.className} text-4xl font-bold mb-8 text-gray-800 dark:text-gray-100`}>
+        Shop Our Collection
+      </h1>
+
       {/* Categories */}
-      <div className="mb-8">
-        <div className="flex flex-wrap gap-2">
-          {categories.map((category) => (
-            <button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors
-                ${selectedCategory === category
-                  ? "bg-purple-600 text-white"
-                  : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                }`}
-            >
-              {category}
-            </button>
-          ))}
-        </div>
+      <div className="flex flex-wrap gap-4 mb-8">
+        {categories.map(category => (
+          <button
+            key={category}
+            onClick={() => setSelectedCategory(category)}
+            className={`${poppins.className} px-4 py-2 rounded-full text-sm font-medium transition-colors
+              ${selectedCategory === category
+                ? 'bg-purple-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300'
+              }`}
+          >
+            {category}
+          </button>
+        ))}
       </div>
 
       {/* Products Grid */}
       {filteredProducts.length === 0 ? (
         <div className="text-center py-12">
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">
+          <h3 className={`${poppins.className} text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2`}>
             {selectedCategory === "All" 
               ? "Everything is sold out!" 
               : `No ${selectedCategory} available right now`}
           </h3>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             Check back soon for new arrivals or try a different category
           </p>
-          {selectedCategory !== "All" && (
-            <button
-              onClick={() => setSelectedCategory("All")}
-              className="mt-4 text-purple-600 hover:text-purple-800 font-medium"
-            >
-              View all items →
-            </button>
-          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -100,7 +99,7 @@ export default function ShopPage() {
               href={`/product/${product.id}`}
               className="group"
             >
-              <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="relative h-48">
                   <Image
                     src={product.imageUrls[0] || "/placeholder.svg"}
@@ -110,9 +109,11 @@ export default function ShopPage() {
                   />
                 </div>
                 <div className="p-4">
-                  <h3 className="font-semibold text-gray-800">{product.name}</h3>
-                  <p className="text-gray-600">${product.price.toFixed(2)}</p>
-                  <p className="text-sm text-gray-500 mt-1 capitalize">
+                  <h3 className={`${poppins.className} font-semibold text-gray-800 dark:text-gray-200`}>
+                    {product.name}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400">${product.price.toFixed(2)}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 capitalize">
                     {product.condition}
                   </p>
                 </div>
