@@ -1,0 +1,13 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /products/{allPaths=**} {
+      allow read: if true;  // Anyone can view products
+      allow create: if request.auth != null  // Only authenticated users can upload
+                   && request.resource.size < 5 * 1024 * 1024  // Max 5MB per file
+                   && request.resource.contentType.matches('image/.*'); // Only images
+      allow delete: if request.auth != null 
+                   && request.auth.uid == resource.metadata.userId; // Only owner can delete
+    }
+  }
+} 
