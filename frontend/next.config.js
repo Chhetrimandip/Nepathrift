@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const path = require('path')
 const nextConfig = {
+  // Trigger redeploy
   images: {
     domains: ['uploadthing.com', 'firebasestorage.googleapis.com']
   },
