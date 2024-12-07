@@ -10,6 +10,7 @@ import {
   updateDoc,
   deleteDoc
 } from 'firebase/firestore';
+//dummy comment 
 
 // Export the db instance
 export { db };
