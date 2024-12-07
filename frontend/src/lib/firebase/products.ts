@@ -3,7 +3,6 @@
 import { db, storage } from '@/lib/firebase'
 import { collection, query, where, getDocs, deleteDoc, doc, addDoc, updateDoc, getDoc } from 'firebase/firestore'
 
-export const dynamicConfig = 'force-dynamic'
 
 export interface Product {
   id: string
