@@ -1,5 +1,8 @@
 import { useState } from 'react'
-import { useUploadThing } from '@/utils/uploadthing'
+import { generateReactHelpers } from '@uploadthing/react'
+import { OurFileRouter } from '@/utils/uploadthing'
+
+const { useUploadThing } = generateReactHelpers<OurFileRouter>()
 
 export const useProductUpload = () => {
   const [isUploading, setIsUploading] = useState(false)

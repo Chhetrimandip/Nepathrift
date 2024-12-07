@@ -2,7 +2,10 @@
 
 import { useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { productsService } from "@/lib/services/products"
+import { ordersService } from "@/lib/services/orders"
+
+export const runtime = 'edge'
+export const revalidate = 0
 
 export default function PaymentSuccessPage() {
   const router = useRouter()
@@ -16,10 +19,10 @@ export default function PaymentSuccessPage() {
       
       if (oid && amt && refId) {
         try {
-          // Update order status in your backend
-          await productsService.updateOrderStatus(oid, "paid", refId)
+          // Verify payment with the backend
+          await ordersService.verify(oid, refId)
           // Redirect to order confirmation
-          router.push(`/orders/${oid}`)
+          router.push(`/orders/${oid}/confirmation`)
         } catch (error) {
           console.error("Payment verification failed:", error)
           router.push("/payment/failed")

@@ -34,8 +34,6 @@ const conditions = [
 export default function SellPage() {
   const router = useRouter()
   const { user } = useAuth()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
   const [images, setImages] = useState<File[]>([])
   const [previews, setPreviews] = useState<string[]>([])
   const [formData, setFormData] = useState({
@@ -53,7 +51,7 @@ export default function SellPage() {
     setImages(prev => [...prev, ...files])
     
     // Create preview URLs for new images
-    const newPreviews = files.map(file => URL.createObjectURL(file))
+    const newPreviews = files.map(file => file ? URL.createObjectURL(file) : '')
     setPreviews(prev => [...prev, ...newPreviews])
   }
 
@@ -70,24 +68,28 @@ export default function SellPage() {
     }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (!user) return
-
+    
     try {
-      setLoading(true)
-      await productsService.create({
-        ...formData,
+      const productData = {
+        name: formData.name,
+        description: formData.description,
+        category: formData.category,
+        condition: formData.condition,
         price: parseFloat(formData.price),
-        sellerId: user.uid,
-        status: "available"
-      }, images)
-      router.push("/dashboard")
+        size: formData.size,
+        brand: formData.brand,
+        sellerId: user?.uid || '',
+        status: 'available' as const,
+        imageUrls: []
+      }
+
+      // Create product with images
+      await productsService.create(productData, images)
+      router.push('/dashboard')
     } catch (error) {
-      console.error("Error creating product:", error)
-      setError("Failed to create product")
-    } finally {
-      setLoading(false)
+      console.error('Error creating product:', error)
     }
   }
 
@@ -97,170 +99,154 @@ export default function SellPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className={`${playfair.className} text-3xl font-bold mb-6 text-gray-800 dark:text-gray-100`}>
+    <div className="max-w-2xl mx-auto px-4 py-8">
+      <h1 className={`${playfair.className} text-3xl font-bold mb-8 text-gray-800 dark:text-gray-100`}>
         Sell Your Item
       </h1>
+      
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-2">
+          <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
+            Photos
+          </label>
+          <div className="grid grid-cols-4 gap-4">
+            {previews.map((url, index) => (
+              <div key={index} className="relative aspect-square">
+                <Image
+                  src={url}
+                  alt={`Product image ${index + 1}`}
+                  fill
+                  className="object-cover rounded-lg"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeImage(index)}
+                  className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ))}
+            {previews.length < 4 && (
+              <label className="aspect-square flex items-center justify-center border-2 border-dashed 
+                border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-purple-500 
+                dark:hover:border-purple-400 transition-colors">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+                <Camera className="text-gray-400 dark:text-gray-500" />
+              </label>
+            )}
+          </div>
+        </div>
 
-      <div className="max-w-2xl mx-auto">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Image Upload */}
+        <div>
+          <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
+            Item Name
+          </label>
+          <input
+            type="text"
+            name="name"
+            required
+            className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 
+            bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+          />
+        </div>
+
+        <div>
+          <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
+            Description
+          </label>
+          <textarea
+            name="description"
+            required
+            rows={4}
+            className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 
+            bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block mb-2 font-semibold">Images (up to 5)</label>
-            <div className="grid grid-cols-3 md:grid-cols-5 gap-4 mb-4">
-              {previews.map((url, index) => (
-                <div key={url} className="relative aspect-square">
-                  <Image
-                    src={url}
-                    alt={`Preview ${index + 1}`}
-                    fill
-                    className="object-cover rounded-lg"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeImage(index)}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
+            <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
+              Category
+            </label>
+            <select
+              name="category"
+              required
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 
+              bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            >
+              <option value="">Select Category</option>
+              {categories.map(category => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
               ))}
-              {previews.length < 5 && (
-                <label className="aspect-square border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-purple-600">
-                  <Camera className="mb-2" />
-                  <span className="text-sm text-gray-600">Add Image</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="hidden"
-                  />
-                </label>
-              )}
-            </div>
+            </select>
           </div>
 
           <div>
-            <label className={`${poppins.className} block text-gray-700 dark:text-gray-200 mb-2`}>
-              Title
+            <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
+              Condition
+            </label>
+            <select
+              name="condition"
+              required
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 
+              bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            >
+              <option value="">Select Condition</option>
+              {conditions.map(condition => (
+                <option key={condition} value={condition}>
+                  {condition}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
+              Price
+            </label>
+            <input
+              type="number"
+              name="price"
+              step="0.01"
+              min="0"
+              required
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 
+              bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
+              Size
             </label>
             <input
               type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
+              name="size"
               required
-              className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600"
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 
+              bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
+        </div>
 
-          <div>
-            <label className={`${poppins.className} block text-gray-700 dark:text-gray-200 mb-2`}>
-              Description
-            </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              required
-              rows={4}
-              className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={`${poppins.className} block text-gray-700 dark:text-gray-200 mb-2`}>
-                Price
-              </label>
-              <input
-                type="number"
-                name="price"
-                value={formData.price}
-                onChange={handleChange}
-                required
-                min="0"
-                step="0.01"
-                className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600"
-              />
-            </div>
-
-            <div>
-              <label className={`${poppins.className} block text-gray-700 dark:text-gray-200 mb-2`}>
-                Category
-              </label>
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                required
-                className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600"
-              >
-                <option value="" className="text-gray-500 dark:text-gray-400">Select Category</option>
-                {categories.map(cat => (
-                  <option key={cat} value={cat} className="text-gray-800 dark:text-gray-200">
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className={`${poppins.className} block text-gray-700 dark:text-gray-200 mb-2`}>
-                Condition
-              </label>
-              <select
-                name="condition"
-                value={formData.condition}
-                onChange={handleChange}
-                required
-                className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600"
-              >
-                <option value="" className="text-gray-500 dark:text-gray-400">Select Condition</option>
-                {conditions.map(condition => (
-                  <option key={condition} value={condition} className="text-gray-800 dark:text-gray-200">
-                    {condition}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className={`${poppins.className} block text-gray-700 dark:text-gray-200 mb-2`}>
-                Size
-              </label>
-              <input
-                type="text"
-                name="size"
-                value={formData.size}
-                onChange={handleChange}
-                className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600"
-              />
-            </div>
-
-            <div>
-              <label className={`${poppins.className} block text-gray-700 dark:text-gray-200 mb-2`}>
-                Brand
-              </label>
-              <input
-                type="text"
-                name="brand"
-                value={formData.brand}
-                onChange={handleChange}
-                className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600"
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 disabled:opacity-50"
-          >
-            {loading ? "Creating..." : "List Item"}
-          </button>
-        </form>
-      </div>
+        <button
+          type="submit"
+          className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 
+          transition-colors font-medium dark:bg-purple-500 dark:hover:bg-purple-600"
+        >
+          List Item
+        </button>
+      </form>
     </div>
   )
 }

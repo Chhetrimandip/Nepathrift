@@ -1,50 +1,26 @@
 import { NextResponse } from 'next/server'
-import { db } from '@/backend/db'
-import { products } from '@/backend/db/schema'
-import { auth } from '@clerk/nextjs'
-import { eq } from 'drizzle-orm'
+import { adminDb } from '@/lib/firebase-admin'
 
-export async function GET(req: Request) {
+export async function GET(request: Request) {
   try {
-    const { userId } = auth()
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const { searchParams } = new URL(request.url)
+    const sellerId = searchParams.get('sellerId')
+
+    if (!sellerId) {
+      return NextResponse.json({ error: 'Seller ID is required' }, { status: 400 })
     }
 
-    const sellerProducts = await db
-      .select()
-      .from(products)
-      .where(eq(products.sellerId, userId))
+    const productsRef = adminDb.collection('products')
+    const snapshot = await productsRef.where('sellerId', '==', sellerId).get()
+    
+    const products = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }))
 
-    return NextResponse.json(sellerProducts)
+    return NextResponse.json({ products })
   } catch (error) {
     console.error('Error fetching seller products:', error)
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-  }
-}
-
-export async function DELETE(req: Request) {
-  try {
-    const { userId } = auth()
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { searchParams } = new URL(req.url)
-    const productId = searchParams.get('id')
-
-    if (!productId) {
-      return NextResponse.json({ error: 'Product ID required' }, { status: 400 })
-    }
-
-    const result = await db
-      .delete(products)
-      .where(eq(products.id, parseInt(productId)))
-      .returning()
-
-    return NextResponse.json(result[0])
-  } catch (error) {
-    console.error('Error deleting product:', error)
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
   }
 } 

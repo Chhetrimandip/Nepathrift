@@ -1,6 +1,19 @@
+"use client"
+
 import { storage, db } from "@/lib/firebase"
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
-import { collection, addDoc, query, where, getDocs, deleteDoc, doc, getDoc, setDoc } from "firebase/firestore"
+import { 
+  collection, 
+  addDoc, 
+  query, 
+  where, 
+  getDocs, 
+  deleteDoc, 
+  doc, 
+  getDoc, 
+  updateDoc 
+} from "firebase/firestore"
+import { getAuth } from 'firebase/auth'
 
 export interface Product {
   id?: string
@@ -19,7 +32,11 @@ export interface Product {
 
 export const productsService = {
   async create(data: Omit<Product, 'id' | 'createdAt'>, images: File[]) {
-    const imageUrls = []
+    const auth = getAuth()
+    const user = auth.currentUser
+    if (!user) throw new Error('Not authenticated')
+
+    const imageUrls: string[] = []
     
     // Upload images
     for (const image of images) {
@@ -32,6 +49,7 @@ export const productsService = {
     // Create product document
     const productData = {
       ...data,
+      sellerId: user.uid,
       imageUrls,
       createdAt: new Date(),
       status: 'available'
@@ -54,40 +72,42 @@ export const productsService = {
     })) as Product[]
   },
 
-  async delete(productId: string) {
-    await deleteDoc(doc(db, "products", productId))
-  },
-
   async getAll() {
-    const q = query(collection(db, "products"), where("status", "==", "available"))
-    const snapshot = await getDocs(q)
+    const snapshot = await getDocs(collection(db, "products"))
     return snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     })) as Product[]
   },
 
-  async getById(productId: string) {
-    const docRef = doc(db, "products", productId)
+  async getById(id: string) {
+    const docRef = doc(db, "products", id)
     const docSnap = await getDoc(docRef)
     
-    if (!docSnap.exists()) {
-      return null
-    }
-
+    if (!docSnap.exists()) return null
+    
     return {
       id: docSnap.id,
       ...docSnap.data()
     } as Product
   },
 
-  async update(productId: string, data: Partial<Product>, newImages?: File[]) {
-    const docRef = doc(db, "products", productId)
+  async update(id: string, data: Partial<Product>, newImages?: File[]) {
+    const auth = getAuth()
+    const user = auth.currentUser
+    if (!user) throw new Error('Not authenticated')
+
+    const docRef = doc(db, "products", id)
+    const docSnap = await getDoc(docRef)
     
-    let imageUrls = data.imageUrls || []
-    
-    if (newImages && newImages.length > 0) {
-      // Upload new images
+    if (!docSnap.exists() || docSnap.data().sellerId !== user.uid) {
+      throw new Error('Unauthorized')
+    }
+
+    const imageUrls = data.imageUrls || []
+
+    // Upload new images if any
+    if (newImages?.length) {
       for (const image of newImages) {
         const storageRef = ref(storage, `products/${Date.now()}-${image.name}`)
         await uploadBytes(storageRef, image)
@@ -96,13 +116,32 @@ export const productsService = {
       }
     }
 
-    const updateData = {
+    await updateDoc(docRef, {
       ...data,
       imageUrls,
       updatedAt: new Date()
+    })
+
+    const updated = await getDoc(docRef)
+    return {
+      id: updated.id,
+      ...updated.data()
+    } as Product
+  },
+
+  async delete(id: string) {
+    const auth = getAuth()
+    const user = auth.currentUser
+    if (!user) throw new Error('Not authenticated')
+
+    const docRef = doc(db, "products", id)
+    const docSnap = await getDoc(docRef)
+    
+    if (!docSnap.exists() || docSnap.data().sellerId !== user.uid) {
+      throw new Error('Unauthorized')
     }
 
-    await setDoc(docRef, updateData, { merge: true })
-    return productId
+    await deleteDoc(docRef)
+    return id
   }
 } 

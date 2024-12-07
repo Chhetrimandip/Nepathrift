@@ -1,16 +1,12 @@
 "use client"
 
-import { Playfair_Display, Poppins } from "next/font/google"
-import { useState, useEffect } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { productsService, Product } from "@/lib/services/products"
+import { useEffect, useState } from 'react'
+import { productsService, Product } from '@/lib/services/products'
+import Image from 'next/image'
+import Link from 'next/link'
 
-const playfair = Playfair_Display({ subsets: ["latin"] })
-const poppins = Poppins({ 
-  weight: ['400', '600'],
-  subsets: ["latin"] 
-})
+export const runtime = 'edge'
+export const revalidate = 0
 
 const categories = [
   "All",
@@ -22,104 +18,157 @@ const categories = [
   "Other"
 ]
 
+const conditions = [
+  "All",
+  "New with tags",
+  "Like new",
+  "Good",
+  "Fair",
+  "Poor"
+]
+
 export default function ShopPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedCategory, setSelectedCategory] = useState("All")
+  const [selectedCategory, setSelectedCategory] = useState('All')
+  const [selectedCondition, setSelectedCondition] = useState('All')
+  const [priceRange, setPriceRange] = useState({ min: '', max: '' })
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const fetchedProducts = await productsService.getAll()
-        setProducts(fetchedProducts)
-      } catch (error) {
-        console.error("Error fetching products:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchProducts()
+    loadProducts()
   }, [])
 
-  const filteredProducts = selectedCategory === "All"
-    ? products
-    : products.filter(product => 
-        product.category.toLowerCase() === selectedCategory.toLowerCase()
-      )
+  const loadProducts = async () => {
+    try {
+      const allProducts = await productsService.getAll()
+      setProducts(allProducts)
+    } catch (error) {
+      console.error('Error loading products:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const filteredProducts = products.filter(product => {
+    const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory
+    const matchesCondition = selectedCondition === 'All' || product.condition === selectedCondition
+    const matchesPrice = (!priceRange.min || product.price >= Number(priceRange.min)) &&
+                        (!priceRange.max || product.price <= Number(priceRange.max))
+    const matchesSearch = !searchQuery || 
+                         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         product.description.toLowerCase().includes(searchQuery.toLowerCase())
+
+    return matchesCategory && matchesCondition && matchesPrice && matchesSearch
+  })
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8 flex justify-center">
+      <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className={`${playfair.className} text-4xl font-bold mb-8 text-gray-800 dark:text-gray-100`}>
-        Shop Our Collection
-      </h1>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Filters */}
+      <div className="mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Search
+          </label>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search products..."
+            className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+          />
+        </div>
 
-      {/* Categories */}
-      <div className="flex flex-wrap gap-4 mb-8">
-        {categories.map(category => (
-          <button
-            key={category}
-            onClick={() => setSelectedCategory(category)}
-            className={`${poppins.className} px-4 py-2 rounded-full text-sm font-medium transition-colors
-              ${selectedCategory === category
-                ? 'bg-purple-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300'
-              }`}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Category
+          </label>
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
           >
-            {category}
-          </button>
-        ))}
+            {categories.map(category => (
+              <option key={category} value={category}>{category}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Condition
+          </label>
+          <select
+            value={selectedCondition}
+            onChange={(e) => setSelectedCondition(e.target.value)}
+            className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+          >
+            {conditions.map(condition => (
+              <option key={condition} value={condition}>{condition}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Price Range
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              type="number"
+              value={priceRange.min}
+              onChange={(e) => setPriceRange(prev => ({ ...prev, min: e.target.value }))}
+              placeholder="Min"
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+            />
+            <input
+              type="number"
+              value={priceRange.max}
+              onChange={(e) => setPriceRange(prev => ({ ...prev, max: e.target.value }))}
+              placeholder="Max"
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Products Grid */}
-      {filteredProducts.length === 0 ? (
-        <div className="text-center py-12">
-          <h3 className={`${poppins.className} text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2`}>
-            {selectedCategory === "All" 
-              ? "Everything is sold out!" 
-              : `No ${selectedCategory} available right now`}
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400">
-            Check back soon for new arrivals or try a different category
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredProducts.map((product) => (
-            <Link
-              key={product.id}
-              href={`/product/${product.id}`}
-              className="group"
-            >
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="relative h-48">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {filteredProducts.map((product) => (
+          <Link key={product.id} href={`/product/${product.id}`}>
+            <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+              <div className="relative h-64">
+                {product.imageUrls?.[0] && (
                   <Image
-                    src={product.imageUrls[0] || "/placeholder.svg"}
+                    src={product.imageUrls[0]}
                     alt={product.name}
                     fill
-                    className="object-cover group-hover:scale-105 transition-transform"
+                    className="object-cover"
                   />
-                </div>
-                <div className="p-4">
-                  <h3 className={`${poppins.className} font-semibold text-gray-800 dark:text-gray-200`}>
-                    {product.name}
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400">${product.price.toFixed(2)}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 capitalize">
-                    {product.condition}
-                  </p>
-                </div>
+                )}
               </div>
-            </Link>
-          ))}
+              <div className="p-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">{product.name}</h3>
+                <p className="text-purple-600 font-bold">${product.price}</p>
+                <p className="text-sm text-gray-500 mt-1">{product.condition}</p>
+                <p className="text-sm text-gray-500">{product.category}</p>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      {filteredProducts.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-gray-500">No products found matching your criteria.</p>
         </div>
       )}
     </div>

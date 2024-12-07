@@ -1,44 +1,17 @@
 import { NextResponse } from 'next/server'
-import { productsService } from '@/lib/services/products'
-import { auth } from '@clerk/nextjs'
+import { adminDb } from '@/lib/firebase-admin'
 
-export async function POST(req: Request) {
+export async function GET() {
   try {
-    const { userId } = auth()
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const data = await req.json()
-    const { images, ...productData } = data
-    
-    const product = await productsService.create({
-      ...productData,
-      sellerId: userId,
-      status: 'available'
-    }, images)
-
-    return NextResponse.json(product)
-  } catch (error) {
-    console.error('Error creating product:', error)
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-  }
-}
-
-export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url)
-    const sellerId = searchParams.get('sellerId')
-    
-    if (sellerId) {
-      const products = await productsService.getBySeller(sellerId)
-      return NextResponse.json(products)
-    }
-    
-    const products = await productsService.getAll()
-    return NextResponse.json(products)
+    const productsRef = adminDb.collection('products')
+    const snapshot = await productsRef.get()
+    const products = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }))
+    return NextResponse.json({ products })
   } catch (error) {
     console.error('Error fetching products:', error)
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
   }
 } 

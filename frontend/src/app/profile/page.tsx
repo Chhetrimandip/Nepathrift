@@ -1,120 +1,71 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
-import { useAuth } from "@/contexts/AuthContext"
-import { useRouter } from "next/navigation"
-import { db } from "@/lib/firebase"
-import { doc, getDoc, setDoc } from "firebase/firestore"
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage"
-import Image from "next/image"
-import { Camera } from "lucide-react"
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
+import { doc, getDoc, updateDoc } from 'firebase/firestore'
+import { db, storage } from '@/lib/firebase'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import Image from 'next/image'
 
 interface UserProfile {
   displayName: string
-  phoneNumber: string
   email: string
   photoURL: string
-  bio: string
+  phoneNumber: string
   address: string
+  bio: string
 }
 
 export default function ProfilePage() {
   const { user } = useAuth()
   const router = useRouter()
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [uploading, setUploading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
   const [profile, setProfile] = useState<UserProfile>({
-    displayName: "",
-    phoneNumber: "",
-    email: "",
-    photoURL: "",
-    bio: "",
-    address: ""
+    displayName: '',
+    email: '',
+    photoURL: '',
+    phoneNumber: '',
+    address: '',
+    bio: ''
   })
 
   useEffect(() => {
     if (!user) {
-      router.push("/auth/signin")
+      router.push('/auth/signin')
       return
     }
 
-    const fetchProfile = async () => {
+    const loadProfile = async () => {
       try {
-        const docRef = doc(db, "users", user.uid)
-        const docSnap = await getDoc(docRef)
-
-        if (docSnap.exists()) {
-          setProfile({
-            ...docSnap.data() as UserProfile,
-            email: user.email || ""
-          })
+        const profileRef = doc(db, 'users', user.uid)
+        const profileSnap = await getDoc(profileRef)
+        
+        if (profileSnap.exists()) {
+          setProfile(profileSnap.data() as UserProfile)
         } else {
+          // Initialize with user's auth data
           setProfile({
-            displayName: user.displayName || "",
-            phoneNumber: user.phoneNumber || "",
-            email: user.email || "",
-            photoURL: user.photoURL || "/default-avatar.png",
-            bio: "",
-            address: ""
+            displayName: user.displayName || '',
+            email: user.email || '',
+            photoURL: user.photoURL || '',
+            phoneNumber: '',
+            address: '',
+            bio: ''
           })
         }
       } catch (error) {
-        console.error("Error fetching profile:", error)
+        console.error('Error loading profile:', error)
+        setError('Failed to load profile')
       } finally {
         setLoading(false)
       }
     }
 
-    fetchProfile()
+    loadProfile()
   }, [user, router])
-
-  const handleImageClick = () => {
-    fileInputRef.current?.click()
-  }
-
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !user) return
-
-    try {
-      setUploading(true)
-      const storage = getStorage()
-      
-      // Create a storage reference with a unique filename
-      const fileExtension = file.name.split('.').pop()
-      const fileName = `${Date.now()}.${fileExtension}`
-      const storageRef = ref(storage, `profile-images/${user.uid}/${fileName}`)
-      
-      // Set the appropriate metadata including content type
-      const metadata = {
-        contentType: file.type,
-        cacheControl: 'public,max-age=7200'
-      }
-
-      await uploadBytes(storageRef, file, metadata)
-      const downloadURL = await getDownloadURL(storageRef)
-      
-      setProfile(prev => ({
-        ...prev,
-        photoURL: downloadURL
-      }))
-
-      // Update the profile with new photo URL
-      const userRef = doc(db, "users", user.uid)
-      await setDoc(userRef, {
-        ...profile,
-        photoURL: downloadURL,
-        updatedAt: new Date().toISOString()
-      }, { merge: true })
-
-    } catch (error) {
-      console.error("Error uploading image:", error)
-    } finally {
-      setUploading(false)
-    }
-  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -124,149 +75,176 @@ export default function ProfilePage() {
     }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!user) return
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
 
     try {
-      await setDoc(doc(db, "users", user.uid), {
-        ...profile,
-        updatedAt: new Date().toISOString()
-      })
-      setIsEditing(false)
+      const storageRef = ref(storage, `users/${user.uid}/profile-image`)
+      await uploadBytes(storageRef, file)
+      const photoURL = await getDownloadURL(storageRef)
+      setProfile(prev => ({ ...prev, photoURL }))
     } catch (error) {
-      console.error("Error updating profile:", error)
+      console.error('Error uploading image:', error)
+      setError('Failed to upload image')
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!user) {
+      router.push('/auth/signin')
+      return
+    }
+  
+    setSaving(true)
+    setError('')
+  
+    try {
+      const profileRef = doc(db, 'users', user.uid)
+      const updates = {
+        displayName: profile.displayName,
+        phoneNumber: profile.phoneNumber,
+        address: profile.address,
+        bio: profile.bio,
+        updatedAt: new Date().toISOString()
+      }
+      await updateDoc(profileRef, updates)
+      router.push('/dashboard')
+    } catch (error) {
+      console.error('Error saving profile:', error)
+      setError('Failed to save profile')
+    } finally {
+      setSaving(false)
     }
   }
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8 flex justify-center items-center">
+      <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Profile</h1>
-          <button
-            onClick={() => setIsEditing(!isEditing)}
-            className="text-purple-600 hover:text-purple-800"
-          >
-            {isEditing ? "Cancel" : "Edit Profile"}
-          </button>
-        </div>
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">Profile Settings</h1>
 
-        <div className="mb-6 flex justify-center">
-          <div className="relative w-32 h-32 group">
-            <div className="relative w-full h-full rounded-full overflow-hidden">
-              <Image
-                src={profile.photoURL || "/default-avatar.png"}
-                alt="Profile"
-                fill
-                className="object-cover"
-              />
-              {isEditing && (
-                <div 
-                  onClick={handleImageClick}
-                  className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <Camera className="w-8 h-8 text-white" />
-                </div>
-              )}
-            </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {error && (
+          <div className="rounded-md bg-red-50 p-4">
+            <div className="text-sm text-red-700">{error}</div>
+          </div>
+        )}
+
+        <div className="flex items-center space-x-6">
+          <div className="relative h-24 w-24">
+            <Image
+              src={profile.photoURL || '/default-avatar.png'}
+              alt="Profile"
+              fill
+              className="rounded-full object-cover"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Profile Photo
+            </label>
             <input
               type="file"
-              ref={fileInputRef}
-              onChange={handleImageChange}
               accept="image/*"
-              className="hidden"
+              onChange={handleImageUpload}
+              className="mt-1 block w-full text-sm text-gray-500
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-full file:border-0
+                file:text-sm file:font-semibold
+                file:bg-purple-50 file:text-purple-700
+                hover:file:bg-purple-100"
             />
-            {uploading && (
-              <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-              </div>
-            )}
           </div>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Name</label>
-              <input
-                type="text"
-                name="displayName"
-                value={profile.displayName}
-                onChange={handleChange}
-                disabled={!isEditing}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
-              />
-            </div>
+        <div>
+          <label htmlFor="displayName" className="block text-sm font-medium text-gray-700">
+            Display Name
+          </label>
+          <input
+            type="text"
+            id="displayName"
+            name="displayName"
+            value={profile.displayName}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+          />
+        </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Email</label>
-              <input
-                type="email"
-                name="email"
-                value={profile.email}
-                disabled
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-50"
-              />
-            </div>
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            Email
+          </label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={profile.email}
+            readOnly
+            className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm"
+          />
+        </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Phone Number</label>
-              <input
-                type="tel"
-                name="phoneNumber"
-                value={profile.phoneNumber}
-                onChange={handleChange}
-                disabled={!isEditing}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
-              />
-            </div>
+        <div>
+          <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">
+            Phone Number
+          </label>
+          <input
+            type="tel"
+            id="phoneNumber"
+            name="phoneNumber"
+            value={profile.phoneNumber}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+          />
+        </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Address</label>
-              <input
-                type="text"
-                name="address"
-                value={profile.address}
-                onChange={handleChange}
-                disabled={!isEditing}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
-              />
-            </div>
+        <div>
+          <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+            Address
+          </label>
+          <textarea
+            id="address"
+            name="address"
+            rows={3}
+            value={profile.address}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+          />
+        </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Bio</label>
-              <textarea
-                name="bio"
-                value={profile.bio}
-                onChange={handleChange}
-                disabled={!isEditing}
-                rows={3}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
-              />
-            </div>
+        <div>
+          <label htmlFor="bio" className="block text-sm font-medium text-gray-700">
+            Bio
+          </label>
+          <textarea
+            id="bio"
+            name="bio"
+            rows={4}
+            value={profile.bio}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+          />
+        </div>
 
-            {isEditing && (
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
-                >
-                  Save Changes
-                </button>
-              </div>
-            )}
-          </div>
-        </form>
-      </div>
+        <div>
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {saving ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
+      </form>
     </div>
   )
 } 

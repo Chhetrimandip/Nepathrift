@@ -1,23 +1,20 @@
-import { Playfair_Display, Poppins, Roboto } from "next/font/google"
-import { AuthProvider } from "../contexts/AuthContext"
-import { CartProvider } from "../contexts/CartContext"
-import Navbar from "./components/Navbar"
-import DynamicBackground from "./components/DynamicBackground"
-import Footer from "./components/Footer"
-import { metadata } from "./metadata"
-import "@/app/globals.css"
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
+import { AuthProvider } from '@/contexts/AuthContext'
+import { CartProvider } from '@/contexts/CartContext'
+import Navbar from '@/components/Navbar'
+import { Suspense } from 'react'
 
-const playfair = Playfair_Display({ subsets: ["latin"] })
-const poppins = Poppins({ 
-  weight: ['400', '500', '600', '700'],
-  subsets: ["latin"] 
-})
-const roboto = Roboto({ 
-  weight: ['400', '500'],
-  subsets: ["latin"] 
-})
+const inter = Inter({ subsets: ['latin'] })
 
-export { metadata }
+export const metadata: Metadata = {
+  title: 'NepaThrift',
+  description: 'Your marketplace for pre-loved items',
+}
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export default function RootLayout({
   children,
@@ -25,15 +22,16 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" data-theme="light">
-      <body className={`${roboto.className} bg-white dark:bg-gray-900 min-h-screen flex flex-col`}>
+    <html lang="en">
+      <body className={inter.className}>
         <AuthProvider>
           <CartProvider>
             <Navbar />
-            <div className="relative z-10 flex-grow">
-              {children}
-            </div>
-            <Footer />
+            <main>
+              <Suspense fallback={<div>Loading...</div>}>
+                {children}
+              </Suspense>
+            </main>
           </CartProvider>
         </AuthProvider>
       </body>

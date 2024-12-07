@@ -1,100 +1,90 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect } from "react"
-import { useAuth } from "./AuthContext"
 
-interface CartItem {
+export interface CartItem {
   id: string
   name: string
   price: number
-  size: string
   quantity: number
   imageUrl: string
+  size?: string
 }
 
 interface CartContextType {
-  cart: CartItem[]
+  items: CartItem[]
   addToCart: (item: CartItem) => void
   removeFromCart: (itemId: string) => void
   updateQuantity: (itemId: string, quantity: number) => void
   clearCart: () => void
   total: number
+  itemCount: number
 }
 
-export const CartContext = createContext<CartContextType | null>(null)
+const CartContext = createContext<CartContextType | undefined>(undefined)
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [cart, setCart] = useState<CartItem[]>([])
-  const { user } = useAuth()
-  
-  // Load cart data with user-specific key
-  useEffect(() => {
-    if (user) {
-      const savedCart = localStorage.getItem(`cart_${user.uid}`)
-      if (savedCart) {
-        setCart(JSON.parse(savedCart))
-      } else {
-        setCart([]) // Clear cart if no saved data for this user
-      }
-    } else {
-      setCart([]) // Clear cart when no user is logged in
-    }
-  }, [user]) // Depend on user to reload cart when user changes
+  const [items, setItems] = useState<CartItem[]>([])
 
-  // Save cart data with user-specific key
+  // Load cart from localStorage on mount
   useEffect(() => {
-    if (user) {
-      localStorage.setItem(`cart_${user.uid}`, JSON.stringify(cart))
+    const savedCart = localStorage.getItem('cart')
+    if (savedCart) {
+      setItems(JSON.parse(savedCart))
     }
-  }, [cart, user])
+  }, [])
 
-  const addToCart = (item: CartItem) => {
-    if (!user) return // Prevent adding to cart if not logged in
-    setCart(prevCart => {
-      const existingItem = prevCart.find(
-        i => i.id === item.id && i.size === item.size
-      )
+  // Save cart to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('cart', JSON.stringify(items))
+  }, [items])
+
+  const addToCart = (newItem: CartItem) => {
+    setItems(currentItems => {
+      const existingItem = currentItems.find(item => item.id === newItem.id)
+      
       if (existingItem) {
-        return prevCart.map(i =>
-          i.id === item.id && i.size === item.size
-            ? { ...i, quantity: i.quantity + 1 }
-            : i
+        return currentItems.map(item =>
+          item.id === newItem.id
+            ? { ...item, quantity: item.quantity + newItem.quantity }
+            : item
         )
       }
-      return [...prevCart, item]
+      
+      return [...currentItems, newItem]
     })
   }
 
-  // Other cart functions remain the same but should check for user
   const removeFromCart = (itemId: string) => {
-    if (!user) return
-    setCart(prevCart => prevCart.filter(item => item.id !== itemId))
+    setItems(currentItems => currentItems.filter(item => item.id !== itemId))
   }
 
   const updateQuantity = (itemId: string, quantity: number) => {
-    if (!user) return
-    setCart(prevCart =>
-      prevCart.map(item =>
+    if (quantity < 1) return
+    
+    setItems(currentItems =>
+      currentItems.map(item =>
         item.id === itemId ? { ...item, quantity } : item
       )
     )
   }
 
   const clearCart = () => {
-    if (!user) return
-    setCart([])
+    setItems([])
   }
 
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
 
   return (
-    <CartContext.Provider value={{ 
-      cart, 
-      addToCart, 
-      removeFromCart, 
-      updateQuantity, 
-      clearCart, 
-      total 
+    <CartContext.Provider value={{
+      items,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+      total,
+      itemCount
     }}>
       {children}
     </CartContext.Provider>
