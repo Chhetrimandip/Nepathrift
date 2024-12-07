@@ -8,6 +8,10 @@ import { getStorage } from 'firebase/storage'
 
 const app = getFirebaseApp()
 
+if (!app) {
+  throw new Error('Firebase app not initialized')
+}
+
 export const auth = getAuth(app)
 export const db = getFirestore(app)
 export const functions = getFunctions(app)
