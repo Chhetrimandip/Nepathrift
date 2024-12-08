@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
 import { checkoutService, ShippingAddress } from '@/lib/services/checkout'
+import EmailVerification from '@/app/components/EmailVerification'
 
 export default function CheckoutPage() {
   const { user } = useAuth()
@@ -29,6 +30,17 @@ export default function CheckoutPage() {
   if (items.length === 0) {
     router.push('/cart')
     return null
+  }
+
+  if (!user?.emailVerified) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <EmailVerification />
+        <div className="opacity-50 pointer-events-none">
+          {/* Rest of your checkout form */}
+        </div>
+      </div>
+    )
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

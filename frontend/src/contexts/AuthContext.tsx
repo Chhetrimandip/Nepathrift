@@ -6,7 +6,9 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
-  User
+  User,
+  setPersistence,
+  browserLocalPersistence
 } from 'firebase/auth'
 import { useRouter } from 'next/navigation'
 import { auth } from '@/lib/firebase'
@@ -28,6 +30,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log('Auth state changed:', user ? {
+        uid: user.uid,
+        email: user.email,
+        emailVerified: user.emailVerified,
+        isAnonymous: user.isAnonymous
+      } : 'No user')
       setUser(user)
       setLoading(false)
     })

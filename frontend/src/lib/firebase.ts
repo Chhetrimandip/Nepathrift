@@ -16,6 +16,11 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 }
 
+console.log('Firebase config:', {
+  ...firebaseConfig,
+  apiKey: firebaseConfig.apiKey?.slice(0, 5) + '...' // Only show first 5 chars of API key
+})
+
 // Initialize Firebase
 let app: FirebaseApp
 
