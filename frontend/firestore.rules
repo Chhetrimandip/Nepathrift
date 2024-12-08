@@ -20,10 +20,19 @@ service cloud.firestore {
 
     // Products collection
     match /products/{productId} {
-      allow read: if true; // Anyone can read products
+      allow read: if true;  // Anyone can read products
       allow create: if isAuthenticated();
       allow update, delete: if isAuthenticated() && 
         resource.data.sellerId == request.auth.uid;
+    }
+
+    // Sellers collection
+    match /sellers/{sellerId} {
+      allow read: if true;  // Anyone can read seller info
+      allow create: if isAuthenticated() && 
+        sellerId == request.auth.uid;
+      allow update: if isAuthenticated() && 
+        sellerId == request.auth.uid;
     }
 
     // Orders collection
@@ -35,6 +44,22 @@ service cloud.firestore {
       allow update: if isAuthenticated() && 
         (resource.data.buyerId == request.auth.uid || 
          resource.data.sellerId == request.auth.uid);
+    }
+
+    // Seller reviews
+    match /sellers/{sellerId}/reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+    }
+
+    // Product comments
+    match /products/{productId}/comments/{commentId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
     }
   }
 } 

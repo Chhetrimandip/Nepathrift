@@ -11,26 +11,45 @@ import {
   deleteDoc, 
   doc, 
   getDoc, 
-  updateDoc 
+  updateDoc, 
+  orderBy 
 } from "firebase/firestore"
 import { getAuth } from 'firebase/auth'
 
 export interface Product {
-  id?: string
+  id: string
   name: string
   description: string
   price: number
   condition: string
   category: string
-  size: string
-  brand: string
-  sellerId: string
-  status: 'available' | 'sold' | 'pending'
+  brand?: string
+  size?: string
   imageUrls: string[]
+  sellerId: string
   createdAt: Date
 }
 
 export const productsService = {
+  async getProduct(id: string): Promise<Product | null> {
+    try {
+      const productRef = doc(db, 'products', id)
+      const productSnap = await getDoc(productRef)
+      
+      if (!productSnap.exists()) {
+        return null
+      }
+      
+      return {
+        id: productSnap.id,
+        ...productSnap.data()
+      } as Product
+    } catch (error) {
+      console.error('Error getting product:', error)
+      throw error
+    }
+  },
+
   async create(data: Omit<Product, 'id' | 'createdAt'>, images: File[]) {
     const auth = getAuth()
     const user = auth.currentUser
@@ -73,7 +92,29 @@ export const productsService = {
   },
 
   async getAll() {
-    const snapshot = await getDocs(collection(db, "products"))
+    const productsRef = collection(db, 'products')
+    const q = query(productsRef, orderBy('createdAt', 'desc'))
+    const snapshot = await getDocs(q)
+    
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Product[]
+  },
+
+  async getByCategory(category: string) {
+    if (category === 'All') {
+      return this.getAll()
+    }
+    
+    const productsRef = collection(db, 'products')
+    const q = query(
+      productsRef, 
+      where('category', '==', category),
+      orderBy('createdAt', 'desc')
+    )
+    const snapshot = await getDocs(q)
+    
     return snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
