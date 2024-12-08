@@ -9,7 +9,7 @@ import {
   User
 } from 'firebase/auth'
 import { useRouter } from 'next/navigation'
-import { auth } from '@/lib/firebase-client'
+import { auth } from '@/lib/firebase'
 
 interface AuthContextType {
   user: User | null

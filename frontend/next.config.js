@@ -9,6 +9,12 @@ const nextConfig = {
   images: {
     domains: ['uploadthing.com', 'firebasestorage.googleapis.com'],
     minimumCacheTTL: 60,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
   },
   experimental: {
     serverActions: {
