@@ -114,9 +114,7 @@ export default function SellPage() {
       
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
-          <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
-            Photos
-          </label>
+          <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Photos</label>
           <div className="grid grid-cols-4 gap-4">
             {previews.map((url, index) => (
               <div key={index} className="relative aspect-square">
@@ -152,9 +150,7 @@ export default function SellPage() {
         </div>
 
         <div>
-          <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
-            Item Name
-          </label>
+          <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Item Name</label>
           <input
             type="text"
             name="name"
@@ -167,9 +163,7 @@ export default function SellPage() {
         </div>
 
         <div>
-          <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
-            Description
-          </label>
+          <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Description</label>
           <textarea
             name="description"
             value={formData.description}
@@ -183,9 +177,7 @@ export default function SellPage() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
-              Category
-            </label>
+            <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Category</label>
             <select
               name="category"
               value={formData.category}
@@ -204,11 +196,11 @@ export default function SellPage() {
           </div>
 
           <div>
-            <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
-              Condition
-            </label>
+            <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Condition</label>
             <select
               name="condition"
+              value={formData.condition}
+              onChange={handleChange}
               required
               className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 
               bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
@@ -225,9 +217,7 @@ export default function SellPage() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
-              Price
-            </label>
+            <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Price</label>
             <input
               type="number"
               name="price"
@@ -242,17 +232,30 @@ export default function SellPage() {
           </div>
 
           <div>
-            <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
-              Size
-            </label>
+            <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Size</label>
             <input
               type="text"
               name="size"
+              value={formData.size}
+              onChange={handleChange}
               required
               className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 
               bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
+        </div>
+
+        <div>
+          <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Brand</label>
+          <input
+            type="text"
+            name="brand"
+            value={formData.brand}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 
+            bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+          />
         </div>
 
         <button

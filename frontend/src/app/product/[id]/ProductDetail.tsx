@@ -70,15 +70,16 @@ export default function ProductDetail() {
   }, [id])
 
   const handleAddToCart = () => {
-    if (!product) return
+    if (!product) return;
     addToCart({
       id: product.id,
       name: product.name,
       price: product.price,
       imageUrl: product.imageUrls[0],
+      quantity: 1,
       sellerId: product.sellerId
-    })
-  }
+    });
+  };
 
   const handleReviewSubmit = async (review: { rating: number; comment: string }) => {
     if (!product || !user) return
@@ -149,10 +150,10 @@ export default function ProductDetail() {
             <h1 className={`${playfair.className} text-3xl font-bold`}>
               {product.name}
             </h1>
-            <p className="mt-4 text-gray-600">{product.description}</p>
-            <p className="mt-4 text-2xl font-bold">${product.price}</p>
+            <p className="mt-4 text-gray-600 dark:text-gray-300">{product.description}</p>
+            <p className="mt-4 text-2xl font-bold text-gray-900 dark:text-white">${product.price}</p>
             
-            <div className="mt-6 space-y-2">
+            <div className="mt-6 space-y-2 text-gray-700 dark:text-gray-300">
               <p><span className="font-semibold">Condition:</span> {product.condition}</p>
               <p><span className="font-semibold">Category:</span> {product.category}</p>
               {product.brand && (
@@ -178,7 +179,7 @@ export default function ProductDetail() {
               <h2 className={`${playfair.className} text-xl font-bold mb-4`}>
                 Seller Information
               </h2>
-              <p className="text-gray-600">{seller.name}</p>
+              <p className="text-gray-600 dark:text-gray-300">{seller.name}</p>
               
               <div className="mt-6">
                 <SellerReview 
@@ -189,7 +190,7 @@ export default function ProductDetail() {
 
               {reviews.length > 0 && (
                 <div className="mt-8">
-                  <h3 className="font-medium mb-4">Seller Reviews</h3>
+                  <h3 className="font-medium mb-4 text-gray-900 dark:text-white">Seller Reviews</h3>
                   <div className="space-y-4">
                     {reviews.map((review: any) => (
                       <div key={review.id} className="border-t py-4">
@@ -197,7 +198,7 @@ export default function ProductDetail() {
                           <span className="text-yellow-400">★</span>
                           <span className="ml-1">{review.rating}</span>
                         </div>
-                        <p className="mt-2 text-gray-600">{review.comment}</p>
+                        <p className="mt-2 text-gray-600 dark:text-gray-300">{review.comment}</p>
                       </div>
                     ))}
                   </div>

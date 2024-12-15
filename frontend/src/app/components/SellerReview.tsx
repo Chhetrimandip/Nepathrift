@@ -50,11 +50,14 @@ export default function SellerReview({ sellerId, onSubmit }: SellerReviewProps) 
       </div>
       
       <div>
-        <label className="block text-sm font-medium text-gray-700">Comment</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Comment</label>
         <textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm"
+          className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 
+            shadow-sm focus:border-purple-500 focus:ring-purple-500 
+            bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+            sm:text-sm"
           rows={3}
         />
       </div>

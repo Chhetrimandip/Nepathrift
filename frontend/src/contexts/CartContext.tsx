@@ -30,7 +30,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const savedCart = localStorage.getItem('cart')
     if (savedCart) {
-      setItems(JSON.parse(savedCart))
+      const parsedCart = JSON.parse(savedCart)
+      const validCart = parsedCart.filter(item => 
+        typeof item.price === 'number' && !isNaN(item.price) && 
+        typeof item.quantity === 'number' && !isNaN(item.quantity) // Validate quantity
+      )
+      setItems(validCart)
     }
   }, [])
 
@@ -60,20 +65,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }
 
   const updateQuantity = (itemId: string, quantity: number) => {
-    if (quantity < 1) return
-    
+    console.log(`Updating quantity for itemId: ${itemId}, New Quantity: ${quantity}`); // Debugging line
+    if (isNaN(quantity) || quantity < 1) return; // Prevent invalid quantities
+
     setItems(currentItems =>
       currentItems.map(item =>
         item.id === itemId ? { ...item, quantity } : item
       )
-    )
+    );
   }
 
   const clearCart = () => {
     setItems([])
   }
 
-  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const total = items.reduce((sum, item) => {
+    const itemTotal = item.price * item.quantity;
+    return sum + (isNaN(itemTotal) ? 0 : itemTotal);
+  }, 0);
+
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
 
   return (

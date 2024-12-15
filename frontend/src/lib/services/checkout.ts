@@ -3,6 +3,7 @@
 import { db } from '@/lib/firebase'
 import { collection, addDoc, doc, updateDoc } from 'firebase/firestore'
 import { CartItem } from '@/contexts/CartContext'
+import { paymentService } from "@/lib/services/payment";
 
 export interface ShippingAddress {
   fullName: string
@@ -55,5 +56,14 @@ export const checkoutService = {
       paymentStatus: status,
       status: status === 'paid' ? 'processing' : 'cancelled'
     })
+  },
+
+  initiateEsewaPayment: async (orderId: string, amount: number) => {
+    try {
+      await paymentService.initiateEsewaPayment(orderId, amount);
+    } catch (error) {
+      console.error("Error initiating eSewa payment:", error);
+      throw error;
+    }
   }
 } 

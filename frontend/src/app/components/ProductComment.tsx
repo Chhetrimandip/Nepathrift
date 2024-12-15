@@ -45,11 +45,13 @@ export default function ProductComment({ productId, onSubmit, comments }: Produc
       {user && (
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Add a comment</label>
+            <label className="block text-sm font-medium text-white-700">Add a comment</label>
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
+                         focus:border-purple-500 focus:ring-purple-500 sm:text-sm 
+                         bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               rows={2}
             />
           </div>

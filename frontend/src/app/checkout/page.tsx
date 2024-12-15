@@ -63,11 +63,7 @@ export default function CheckoutPage() {
         shippingAddress,
         total
       )
-
-      // Here you would typically integrate with a payment gateway
-      // For now, we'll simulate a successful payment
-      await checkoutService.updatePaymentStatus(orderId, 'paid')
-
+      await checkoutService.initiateEsewaPayment(orderId, total)
       clearCart()
       router.push(`/orders/${orderId}`)
     } catch (error) {
