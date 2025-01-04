@@ -20,7 +20,7 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="bg-white shadow-lg">
+    <nav className="bg-gray-800 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
@@ -46,13 +46,19 @@ export default function Navbar() {
                 </Link>
                 <Link 
                   href="/seller/products" 
-                  className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium"
+                  className="text-gray-300 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium"
                 >
                   My Products
                 </Link>
+                <Link 
+                  href="/chatbox"
+                  className="text-gray-300 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Chat with Admin
+                </Link>
                 <button
                   onClick={handleSignOut}
-                  className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium"
+                  className="text-gray-300 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium"
                 >
                   Sign Out
                 </button>
@@ -70,7 +76,7 @@ export default function Navbar() {
           <div className="sm:hidden flex items-center">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-purple-600"
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-300 hover:text-purple-600"
             >
               <span className="sr-only">Open main menu</span>
               {/* Hamburger icon */}
@@ -99,7 +105,7 @@ export default function Navbar() {
           <div className="px-2 pt-2 pb-3 space-y-1">
             <Link 
               href="/shop"
-              className="block text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-base font-medium"
+              className="block text-gray-300 hover:text-purple-600 px-3 py-2 rounded-md text-base font-medium"
               onClick={() => setIsMenuOpen(false)}
             >
               Shop
@@ -108,24 +114,31 @@ export default function Navbar() {
               <>
                 <Link 
                   href="/sell"
-                  className="block text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-base font-medium"
+                  className="block text-gray-300 hover:text-purple-600 px-3 py-2 rounded-md text-base font-medium"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Sell
                 </Link>
                 <Link 
                   href="/seller/products"
-                  className="block text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-base font-medium"
+                  className="block text-gray-300 hover:text-purple-600 px-3 py-2 rounded-md text-base font-medium"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   My Products
+                </Link>
+                <Link 
+                  href="/chatbox"
+                  className="block text-gray-300 hover:text-purple-600 px-3 py-2 rounded-md text-base font-medium"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Chat with Admin
                 </Link>
                 <button
                   onClick={() => {
                     handleSignOut()
                     setIsMenuOpen(false)
                   }}
-                  className="block w-full text-left text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-base font-medium"
+                  className="block w-full text-left text-gray-300 hover:text-purple-600 px-3 py-2 rounded-md text-base font-medium"
                 >
                   Sign Out
                 </button>
@@ -133,7 +146,7 @@ export default function Navbar() {
             ) : (
               <Link 
                 href="/auth/signin"
-                className="block text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-base font-medium"
+                className="block text-gray-300 hover:text-purple-600 px-3 py-2 rounded-md text-base font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Sign In

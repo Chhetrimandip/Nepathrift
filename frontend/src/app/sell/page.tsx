@@ -7,6 +7,17 @@ import Image from "next/image"
 import { productsService } from "@/lib/services/products"
 import { Camera, X } from "lucide-react"
 import { Playfair_Display, Poppins } from "next/font/google"
+import { getAuth } from "firebase/auth"
+import { getStorage, ref, uploadBytes } from 'firebase/storage';
+import { storage } from "@/lib/firebase"
+const auth = getAuth();
+const user = auth.currentUser;
+console.log('Current User:', auth.currentUser);
+
+if (!user) {
+    console.error('User is not authenticated');
+    // Handle the unauthenticated state (e.g., redirect to login)
+}
 
 const playfair = Playfair_Display({ subsets: ["latin"] })
 const poppins = Poppins({ 
@@ -30,6 +41,20 @@ const conditions = [
   "Fair",
   "Poor"
 ]
+
+async function uploadProductImage(file) {
+  try {
+    if (!auth.currentUser) {
+      throw new Error('User is not authenticated.');
+    }
+
+    const storageRef = ref(storage, `products/${Date.now()}-${file.name}`);
+    await uploadBytes(storageRef, file);
+    console.log('Upload successful');
+  } catch (error) {
+    console.error('Error uploading file:', error);
+  }
+}
 
 export default function SellPage() {
   const router = useRouter()
@@ -91,6 +116,9 @@ export default function SellPage() {
         status: 'available' as const,
         imageUrls: []
       }
+
+      console.log('Product Data:', productData);
+      console.log('Images to upload:', images);
 
       // Create product with images
       await productsService.create(productData, images)

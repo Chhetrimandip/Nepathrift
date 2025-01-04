@@ -63,9 +63,9 @@ export default function CheckoutPage() {
         shippingAddress,
         total
       )
-      await checkoutService.initiateEsewaPayment(orderId, total)
-      clearCart()
-      router.push(`/orders/${orderId}`)
+      
+      // Redirect to the payment confirmation page
+      router.push(`/payment/confirmation`)
     } catch (error) {
       console.error('Checkout error:', error)
       setError('Failed to process checkout. Please try again.')

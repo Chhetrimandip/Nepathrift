@@ -28,8 +28,8 @@ export default function Navbar() {
             <Link href="/sell" className="hover:text-purple-600 dark:text-gray-200 dark:hover:text-purple-400">
               Sell
             </Link>
-            <Link href="/profile" className="hover:text-purple-600 dark:text-gray-200 dark:hover:text-purple-400">
-              Profile
+            <Link href="/chatbox" className="hover:text-purple-600 dark:text-gray-200 dark:hover:text-purple-400">
+              Chat
             </Link>
             {user ? (
               <>
@@ -45,7 +45,6 @@ export default function Navbar() {
                 Sign In
               </Link>
             )}
-            <ThemeToggle />
             <Link href="/cart" className="relative hover:text-purple-600 dark:text-gray-200 dark:hover:text-purple-400">
               <ShoppingCart size={24} />
               {itemCount > 0 && (
@@ -95,12 +94,12 @@ export default function Navbar() {
                 Sell
               </Link>
               <Link 
-                href="/profile" 
-                className="hover:text-purple-600 dark:text-gray-200 dark:hover:text-purple-400"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Profile
-              </Link>
+                  href="/chatbox"
+                  className="block text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-base font-medium"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Chat with Admin
+                </Link>
               {user ? (
                 <>
                   <Link 
