@@ -38,14 +38,13 @@ const Chatbox = () => {
 
     return (
         <div className="bg-gray-100 p-4 rounded-lg shadow-md">
-            <h2 className="text-lg font-semibold mb-2">Chat with Admin</h2>
             <div className="max-h-60 overflow-y-auto mb-4">
                 {messages.map((message) => (
                     <div key={message.id} className={message.senderId === userId ? "text-right" : "text-left"}>
                         {message.type === "image" ? (
                             <img src={message.content} alt="Screenshot" className="max-w-xs rounded-md" />
                         ) : (
-                            <p className="bg-white inline-block p-2 rounded-md shadow-sm">{message.content}</p>
+                            <p className="bg-black inline-block p-2 rounded-md shadow-sm">{message.content}</p>
                         )}
                     </div>
                 ))}
@@ -55,9 +54,9 @@ const Chatbox = () => {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Type your message..."
-                className="border rounded-md p-2 w-full"
+                className="border rounded-md p-2 w-full text-black"
             />
-            <button onClick={handleSendMessage} className="bg-blue-500 text-white rounded-md px-4 py-2 mt-2">
+            <button onClick={handleSendMessage} className="bg-blue-500 text-black rounded-md px-4 py-2 mt-2">
                 Send
             </button>
         </div>

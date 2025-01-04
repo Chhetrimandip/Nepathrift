@@ -1,5 +1,5 @@
 import { db } from '@/lib/firebase'
-import { collection, addDoc, query, where, getDocs, doc, getDoc } from 'firebase/firestore'
+import { collection, addDoc, query, where, getDocs, doc, getDoc, deleteDoc } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
 
 export interface Review {
@@ -42,5 +42,10 @@ export const reviewsService = {
       id: doc.id,
       ...doc.data()
     })) as Review[]
-  }
+  },
+
+  async delete(sellerId: string, reviewId: string) {
+    const reviewRef = doc(db, `sellers/${sellerId}/reviews`, reviewId);
+    await deleteDoc(reviewRef);
+  },
 } 

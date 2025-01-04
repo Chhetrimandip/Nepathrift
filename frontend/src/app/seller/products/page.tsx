@@ -97,7 +97,7 @@ export default function SellerProductsPage() {
                 <p className="text-gray-600 dark:text-gray-300 text-sm mb-2 line-clamp-2">{product.description}</p>
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-lg font-bold text-purple-600 dark:text-purple-400">
-                    ${product.price.toFixed(2)}
+                    Rs {product.price.toFixed(2)}
                   </span>
                   <span className="text-sm text-gray-500 dark:text-gray-400">
                     {product.condition}

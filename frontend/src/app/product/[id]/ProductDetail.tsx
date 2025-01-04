@@ -93,6 +93,15 @@ export default function ProductDetail() {
     setComments(prev => [newComment, ...prev])
   }
 
+  const handleDeleteReview = async (reviewId: string) => {
+    try {
+      await reviewsService.delete(product.sellerId, reviewId);
+      setReviews(reviews.filter((review) => review.id !== reviewId));
+    } catch (error) {
+      console.error("Error deleting review:", error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -151,7 +160,9 @@ export default function ProductDetail() {
               {product.name}
             </h1>
             <p className="mt-4 text-gray-600 dark:text-gray-300">{product.description}</p>
-            <p className="mt-4 text-2xl font-bold text-gray-900 dark:text-white">${product.price}</p>
+            <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">
+              Rs {product.price.toFixed(2)}
+            </h3>
             
             <div className="mt-6 space-y-2 text-gray-700 dark:text-gray-300">
               <p><span className="font-semibold">Condition:</span> {product.condition}</p>
@@ -184,7 +195,9 @@ export default function ProductDetail() {
               <div className="mt-6">
                 <SellerReview 
                   sellerId={product.sellerId} 
+                  reviews={reviews}
                   onSubmit={handleReviewSubmit}
+                  onDelete={handleDeleteReview}
                 />
               </div>
 

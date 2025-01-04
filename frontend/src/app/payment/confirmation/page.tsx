@@ -130,7 +130,7 @@ export default function PaymentConfirmationPage() {
         <img src={selectedQrImage} alt="Selected QR Code" className="mx-auto mb-4" style={{ width: '200px', height: '200px' }} />
       )}
 
-      <p className="mb-4 text-white">Amount: ${paymentInfo.amount}</p>
+      <p className="mb-4 text-white">Amount: Rs. {paymentInfo.amount}</p>
 
       <input
         type="file"

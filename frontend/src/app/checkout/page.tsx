@@ -88,7 +88,7 @@ export default function CheckoutPage() {
             )}
 
             <div>
-              <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="fullName" className="block text-sm font-medium text-gray-100">
                 Full Name
               </label>
               <input
@@ -103,7 +103,7 @@ export default function CheckoutPage() {
             </div>
 
             <div>
-              <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="address" className="block text-sm font-medium text-gray-100">
                 Address
               </label>
               <input
@@ -113,13 +113,13 @@ export default function CheckoutPage() {
                 required
                 value={shippingAddress.address}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-100"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="city" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="city" className="block text-sm font-medium text-gray-100">
                   City
                 </label>
                 <input
@@ -134,7 +134,7 @@ export default function CheckoutPage() {
               </div>
 
               <div>
-                <label htmlFor="state" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="state" className="block text-sm font-medium text-gray-100">
                   State
                 </label>
                 <input
@@ -151,7 +151,7 @@ export default function CheckoutPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="postalCode" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="postalCode" className="block text-sm font-medium text-gray-100">
                   Postal Code
                 </label>
                 <input
@@ -166,7 +166,7 @@ export default function CheckoutPage() {
               </div>
 
               <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-100">
                   Phone
                 </label>
                 <input
@@ -193,21 +193,21 @@ export default function CheckoutPage() {
 
         {/* Order Summary */}
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Order Summary</h2>
+          <h2 className="text-2xl font-bold text-gray-100 mb-6">Order Summary</h2>
           <div className="bg-gray-50 rounded-lg p-6">
             {items.map((item) => (
               <div key={item.id} className="flex justify-between py-2">
                 <div>
-                  <p className="font-medium">{item.name}</p>
-                  <p className="text-sm text-gray-500">Quantity: {item.quantity}</p>
+                  <p className="font-medium text-gray-900">{item.name}</p>
+                  <p className="text-sm text-gray-900">Quantity: {item.quantity}</p>
                 </div>
-                <p className="font-medium">${(item.price * item.quantity).toFixed(2)}</p>
+                <p className="font-medium text-gray-900">${(item.price * item.quantity).toFixed(2)}</p>
               </div>
             ))}
             <div className="border-t mt-4 pt-4">
               <div className="flex justify-between">
-                <span className="font-medium">Total</span>
-                <span className="font-bold">${total.toFixed(2)}</span>
+                <span className="font-medium text-gray-900">Total</span>
+                <span className="font-bold text-gray-900">${total.toFixed(2)}</span>
               </div>
             </div>
           </div>

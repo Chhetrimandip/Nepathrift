@@ -47,7 +47,7 @@ export default function CartPage() {
                 {item.size && (
                   <p className="text-sm text-gray-500">Size: {item.size}</p>
                 )}
-                <p className="font-medium text-purple-600">${item.price}</p>
+                <p className="font-medium text-black">${item.price}</p>
               </div>
 
               <div className="flex items-center gap-2">
@@ -82,17 +82,17 @@ export default function CartPage() {
             
             <div className="space-y-4">
               <div className="flex justify-between">
-                <span className="text-gray-600">Subtotal</span>
-                <span className="font-medium">${total.toFixed(2)}</span>
+                <span className="text-gray-900">Subtotal</span>
+                <span className="font-medium text-black">Rs.{total.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Shipping</span>
-                <span className="font-medium">Calculated at checkout</span>
+                <span className="text-gray-900">Shipping</span>
+                <span className="font-medium text-black">Calculated at checkout</span>
               </div>
               <div className="border-t pt-4">
                 <div className="flex justify-between">
-                  <span className="text-lg font-semibold">Total</span>
-                  <span className="text-lg font-semibold">${total.toFixed(2)}</span>
+                  <span className="text-lg font-semibold text-black">Total</span>
+                  <span className="text-lg font-semibold text-black">Rs.{total.toFixed(2)}</span>
                 </div>
               </div>
             </div>

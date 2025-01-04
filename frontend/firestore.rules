@@ -71,8 +71,7 @@ service cloud.firestore {
       allow update, delete: if isAuthenticated() && 
         resource.data.userId == request.auth.uid;
     }
-  }
-}
+
 
 service firebase.storage {
   match /b/{bucket}/o {
