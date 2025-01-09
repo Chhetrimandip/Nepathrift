@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
@@ -22,15 +22,17 @@ export default function CheckoutPage() {
     phone: ''
   })
 
-  if (!user) {
-    router.push('/auth/signin?redirect=/checkout')
-    return null
-  }
+  useEffect(() => {
+    if (!user) {
+      router.push('/auth/signin?redirect=/checkout')
+      return
+    }
 
-  if (items.length === 0) {
-    router.push('/cart')
-    return null
-  }
+    if (items.length === 0) {
+      router.push('/cart')
+      return
+    }
+  }, [user, items, router])
 
   if (!user?.emailVerified) {
     return (
@@ -52,9 +54,15 @@ export default function CheckoutPage() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
+    e.preventDefault();
+    
+    if (!user) {
+      setError('Please sign in to place an order');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
 
     try {
       const orderId = await checkoutService.createOrder(
@@ -62,15 +70,15 @@ export default function CheckoutPage() {
         items,
         shippingAddress,
         total
-      )
+      );
       
-      // Redirect to the payment confirmation page
-      router.push(`/payment/confirmation`)
+      clearCart();
+      window.location.href = `/payment/confirmation?orderId=${orderId}`;
     } catch (error) {
-      console.error('Checkout error:', error)
-      setError('Failed to process checkout. Please try again.')
+      console.error('Checkout error:', error);
+      setError('Failed to process checkout. Please try again.');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -134,7 +142,7 @@ export default function CheckoutPage() {
               </div>
 
               <div>
-                <label htmlFor="state" className="block text-sm font-medium text-gray-100">
+                <label htmlFor="state" className="block text-sm font-medium text-gray-900">
                   State
                 </label>
                 <input

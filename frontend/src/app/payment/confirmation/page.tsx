@@ -1,36 +1,70 @@
 "use client"
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { auth, db, storage } from '@/lib/firebase';
-import { doc, setDoc, addDoc, collection } from 'firebase/firestore';
+import { doc, getDoc, setDoc, addDoc, collection, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function PaymentConfirmationPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const orderId = searchParams.get('orderId');
   const [paymentInfo, setPaymentInfo] = useState(null);
   const [selectedQrImage, setSelectedQrImage] = useState(null);
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const { user } = useAuth();
 
-  console.log("Current user:", user);
-  if (!user) {
-    console.error("User is not authenticated.");
-    return <div>Please log in to access this page.</div>;
-  }
-
   useEffect(() => {
-    const fetchPaymentInfo = async () => {
-      const info = {
-        amount: 100,
-        paymentDetails: "A/C Holder Name: MANDIP CHHETRI Account Number: 0795753102170001        Bank Name: NIC ASIA BANK    Branch Name: Kushma",
-      };
-      setPaymentInfo(info);
+    if (!orderId) {
+      router.push('/checkout');
+      return;
+    }
+
+    const fetchOrderDetails = async () => {
+      if (!orderId) return;
+
+      const orderRef = doc(db, 'orders', orderId);
+      const orderSnap = await getDoc(orderRef);
+      
+      if (orderSnap.exists()) {
+        const orderData = orderSnap.data();
+        setPaymentInfo({
+          amount: orderData.total,
+          paymentDetails: "A/C Holder Name: MANDIP CHHETRI Account Number: 0795753102170001 Bank Name: NIC ASIA BANK Branch Name: Kushma",
+        });
+      }
     };
 
-    fetchPaymentInfo();
-  }, []);
+    fetchOrderDetails();
+  }, [orderId, router]);
+
+  const handleSubmitScreenshot = async () => {
+    if (!screenshot || !orderId) return;
+
+    try {
+      const storageRef = ref(storage, `payment-proofs/${orderId}-${Date.now()}-${screenshot.name}`);
+      await uploadBytes(storageRef, screenshot);
+      const fileUrl = await getDownloadURL(storageRef);
+
+      // Update order with payment proof
+      const orderRef = doc(db, 'orders', orderId);
+      await updateDoc(orderRef, {
+        paymentProof: fileUrl,
+        paymentStatus: 'pending_verification',
+        updatedAt: new Date()
+      });
+
+      // Send the screenshot as a message to admin
+      await sendMessage(user.uid, "admin", fileUrl, "image");
+
+      // Redirect to order confirmation
+      router.push(`/orders/${orderId}/confirmation`);
+    } catch (error) {
+      console.error("Error uploading screenshot:", error);
+    }
+  };
 
   const handleBack = () => {
     router.push("/checkout");
@@ -49,36 +83,6 @@ export default function PaymentConfirmationPage() {
     const file = e.target.files[0];
     if (file) {
       setScreenshot(file);
-    }
-  };
-
-  const handleSubmitScreenshot = async () => {
-    if (screenshot) {
-        const userId = user.uid; // Get the actual user ID from authentication
-        const storageRef = ref(storage, `screenshots/${userId}/${Date.now()}-${screenshot.name}`);
-        try {
-            console.log("User ID:", userId);
-            console.log("Storage Reference:", storageRef);
-            
-            await uploadBytes(storageRef, screenshot);
-            const fileUrl = await getDownloadURL(storageRef);
-
-            // Store the screenshot URL in Firestore
-            await setDoc(doc(db, "payments", userId), {
-                screenshotUrl: fileUrl,
-                timestamp: new Date(),
-            });
-
-            // Send the screenshot as a message to the chat
-            await sendMessage(userId, "admin", fileUrl, "image");
-
-            // Redirect to chatbox
-            router.push('/chatbox'); // Adjust the path to your chatbox page
-        } catch (error) {
-            console.error("Error uploading screenshot:", error);
-        }
-    } else {
-        console.error("No screenshot selected.");
     }
   };
 

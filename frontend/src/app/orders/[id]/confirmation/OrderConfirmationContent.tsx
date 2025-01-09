@@ -73,7 +73,7 @@ export default function OrderConfirmationContent(): JSX.Element {
             Order ID: {order.id}
           </p>
           <p className="text-gray-600 dark:text-gray-300 mb-4">
-            Total: ${order.total.toFixed(2)}
+            Total: ${order.price.toFixed(2)}
           </p>
         </div>
 

@@ -46,7 +46,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       await signInWithEmailAndPassword(auth, email, password)
-      router.push('/dashboard')
+      
+      // Check if the email contains "4nepathrift" and redirect accordingly
+      if (email.includes("4nepathrift")) {
+        router.push('/admin')
+      } else {
+        router.push('/dashboard')
+      }
     } catch (error) {
       console.error('Error signing in:', error)
       throw error

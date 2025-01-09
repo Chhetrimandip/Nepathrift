@@ -6,6 +6,7 @@ import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import Link from 'next/link'
 import Image from 'next/image'
+import Orders from "@/components/Orders";
 
 interface UserProfile {
   displayName: string
@@ -101,6 +102,7 @@ export default function Dashboard() {
               </p>
             </Link>
           </div>
+          <Orders />
         </div>
       </div>
     </div>

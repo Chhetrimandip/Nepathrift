@@ -3,8 +3,10 @@
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 export default function SignInPage() {
+  const router = useRouter()
   const { signIn } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -19,8 +21,8 @@ export default function SignInPage() {
     try {
       await signIn(email, password)
     } catch (error) {
-      console.error('Sign in error:', error)
-      setError('Failed to sign in. Please check your credentials.')
+      console.error('Sign in failed:', error)
+      setError('Sign in failed. Please check your credentials.')
     } finally {
       setLoading(false)
     }

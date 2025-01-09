@@ -17,6 +17,11 @@ service firebase.storage {
     return request.resource.size < 5 * 1024 * 1024; // 5MB
   }
 
+  // Add admin check function
+  function isAdmin() {
+    return request.auth.uid == "admin";
+  }
+
   // User profile images
   match /users/{userId}/{allPaths=**} {
     allow read: if isAuthenticated();
@@ -25,12 +30,14 @@ service firebase.storage {
                 && isValidFileSize();
   }
 
-  // Product images
+  // Product images with admin access
   match /products/{productId}/{allPaths=**} {
-    allow read: if true; // Anyone can view product images
-    allow write: if isAuthenticated() 
-                && isImageType() 
-                && isValidFileSize();
+    allow read: if true;  // Anyone can view product images
+    allow write: if isAuthenticated() && (
+      isImageType() && 
+      isValidFileSize() && 
+      (isAdmin() || request.auth != null)  // Allow admin or authenticated users
+    );
   }
 
   // Screenshots
