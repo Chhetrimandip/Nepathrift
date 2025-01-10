@@ -1,14 +1,34 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
+import { db } from '@/lib/firebase'
+import { collection, query, where, onSnapshot } from 'firebase/firestore'
 
 export default function Navbar() {
   const { user, signOut } = useAuth()
   const router = useRouter()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  useEffect(() => {
+    if (!user) return
+
+    const q = query(
+      collection(db, "chats"),
+      where('participants', 'array-contains', user.uid),
+      where('seen', '==', false),
+      where('senderId', '!=', user.uid)
+    )
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setUnreadCount(snapshot.size)
+    })
+
+    return () => unsubscribe()
+  }, [user])
 
   const handleSignOut = async () => {
     try {

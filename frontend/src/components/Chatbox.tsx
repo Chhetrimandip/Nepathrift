@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { db } from "@/lib/firebase"; // Adjust the import based on your structure
+import { db } from "@/lib/firebase";
 import { collection, query, orderBy, onSnapshot, addDoc } from "firebase/firestore";
+import MediaUpload from './MediaUpload';
+import { Send } from 'lucide-react';
 
 const Chatbox = ({ userId, adminId }) => {
     const [messages, setMessages] = useState([]);
@@ -15,7 +17,6 @@ const Chatbox = ({ userId, adminId }) => {
             const messagesArray = [];
             querySnapshot.forEach((doc) => {
                 const messageData = { id: doc.id, ...doc.data() };
-                // Filter messages for the specific user and admin
                 if (
                     (messageData.senderId === userId && messageData.receiverId === adminId) ||
                     (messageData.senderId === adminId && messageData.receiverId === userId)
@@ -29,21 +30,26 @@ const Chatbox = ({ userId, adminId }) => {
         return () => unsubscribe();
     }, [userId, adminId]);
 
-    const handleSendMessage = async () => {
-        if (newMessage.trim()) {
-            try {
-                await addDoc(collection(db, "messages"), {
-                    senderId: userId,
-                    receiverId: adminId,
-                    content: newMessage,
-                    timestamp: new Date(),
-                    type: "text",
-                });
-                setNewMessage("");
-            } catch (error) {
-                console.error("Error sending message: ", error);
-            }
+    const handleSendMessage = async (mediaUrl?: string, mediaType?: 'image' | 'video') => {
+        if ((!newMessage.trim() && !mediaUrl) || !userId) return;
+
+        try {
+            await addDoc(collection(db, "messages"), {
+                senderId: userId,
+                receiverId: adminId,
+                content: mediaUrl || newMessage,
+                timestamp: new Date(),
+                type: mediaUrl ? mediaType : "text",
+                seen: false
+            });
+            setNewMessage("");
+        } catch (error) {
+            console.error("Error sending message: ", error);
         }
+    };
+
+    const handleMediaUpload = (url: string, type: 'image' | 'video') => {
+        handleSendMessage(url, type);
     };
 
     const renderMessage = (message) => {
@@ -51,8 +57,8 @@ const Chatbox = ({ userId, adminId }) => {
         
         return (
             <div key={message.id} 
-                className={`flex mb-2 ${isSentByMe ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[70%] ${isSentByMe ? 'bg-blue-500 text-white' : 'bg-gray-300 text-black'} 
+                className={`flex ${isSentByMe ? 'justify-end' : 'justify-start'} mb-4`}>
+                <div className={`${isSentByMe ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-800'} 
                     rounded-lg px-4 py-2`}>
                     {message.type === "image" ? (
                         <>
@@ -75,6 +81,12 @@ const Chatbox = ({ userId, adminId }) => {
                                 </div>
                             )}
                         </>
+                    ) : message.type === "video" ? (
+                        <video
+                            src={message.content}
+                            controls
+                            className="w-48 rounded-md"
+                        />
                     ) : (
                         message.content
                     )}
@@ -89,18 +101,19 @@ const Chatbox = ({ userId, adminId }) => {
                 {messages.map(renderMessage)}
             </div>
             <div className="flex gap-2">
+                <MediaUpload onUploadComplete={handleMediaUpload} />
                 <input
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                     placeholder="Type your message..."
-                    className="flex-1 border rounded-md p-2 text-black"
+                    className="flex-1 border rounded-md text-black p-2"
                 />
                 <button 
-                    onClick={handleSendMessage} 
-                    className="bg-blue-500 text-white rounded-md px-4 py-2">
-                    Send
+                    onClick={() => handleSendMessage()} 
+                    className="bg-blue-500 rounded-md px-4 py-2">
+                    <Send className="h-5 w-5" />
                 </button>
             </div>
         </div>
