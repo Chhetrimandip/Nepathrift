@@ -7,6 +7,17 @@ import Image from "next/image"
 import { productsService } from "@/lib/services/products"
 import { Camera, X } from "lucide-react"
 import { Playfair_Display, Poppins } from "next/font/google"
+import { getAuth } from "firebase/auth"
+import { getStorage, ref, uploadBytes } from 'firebase/storage';
+import { storage } from "@/lib/firebase"
+const auth = getAuth();
+const user = auth.currentUser;
+console.log('Current User:', auth.currentUser);
+
+if (!user) {
+    console.error('User is not authenticated');
+    // Handle the unauthenticated state (e.g., redirect to login)
+}
 
 const playfair = Playfair_Display({ subsets: ["latin"] })
 const poppins = Poppins({ 
@@ -30,6 +41,20 @@ const conditions = [
   "Fair",
   "Poor"
 ]
+
+async function uploadProductImage(file) {
+  try {
+    if (!auth.currentUser) {
+      throw new Error('User is not authenticated.');
+    }
+
+    const storageRef = ref(storage, `products/${Date.now()}-${file.name}`);
+    await uploadBytes(storageRef, file);
+    console.log('Upload successful');
+  } catch (error) {
+    console.error('Error uploading file:', error);
+  }
+}
 
 export default function SellPage() {
   const router = useRouter()
@@ -71,25 +96,36 @@ export default function SellPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     
+    if (!user) return
+    
     try {
+      const price = parseFloat(formData.price)
+      if (isNaN(price) || price <= 0) {
+        throw new Error('Please enter a valid price')
+      }
+
       const productData = {
         name: formData.name,
         description: formData.description,
         category: formData.category,
         condition: formData.condition,
-        price: parseFloat(formData.price),
+        price: price,
         size: formData.size,
         brand: formData.brand,
-        sellerId: user?.uid || '',
+        sellerId: user.uid,
         status: 'available' as const,
         imageUrls: []
       }
 
+      console.log('Product Data:', productData);
+      console.log('Images to upload:', images);
+
       // Create product with images
       await productsService.create(productData, images)
-      router.push('/dashboard')
+      router.push('/seller/products')
     } catch (error) {
       console.error('Error creating product:', error)
+      alert(error instanceof Error ? error.message : 'Failed to create product')
     }
   }
 
@@ -106,9 +142,7 @@ export default function SellPage() {
       
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
-          <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
-            Photos
-          </label>
+          <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Photos</label>
           <div className="grid grid-cols-4 gap-4">
             {previews.map((url, index) => (
               <div key={index} className="relative aspect-square">
@@ -116,6 +150,7 @@ export default function SellPage() {
                   src={url}
                   alt={`Product image ${index + 1}`}
                   fill
+                  sizes="(max-width: 768px) 25vw, 10vw"
                   className="object-cover rounded-lg"
                 />
                 <button
@@ -144,12 +179,12 @@ export default function SellPage() {
         </div>
 
         <div>
-          <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
-            Item Name
-          </label>
+          <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Item Name</label>
           <input
             type="text"
             name="name"
+            value={formData.name}
+            onChange={handleChange}
             required
             className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 
             bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
@@ -157,11 +192,11 @@ export default function SellPage() {
         </div>
 
         <div>
-          <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
-            Description
-          </label>
+          <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Description</label>
           <textarea
             name="description"
+            value={formData.description}
+            onChange={handleChange}
             required
             rows={4}
             className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 
@@ -171,11 +206,11 @@ export default function SellPage() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
-              Category
-            </label>
+            <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Category</label>
             <select
               name="category"
+              value={formData.category}
+              onChange={handleChange}
               required
               className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 
               bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
@@ -190,11 +225,11 @@ export default function SellPage() {
           </div>
 
           <div>
-            <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
-              Condition
-            </label>
+            <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Condition</label>
             <select
               name="condition"
+              value={formData.condition}
+              onChange={handleChange}
               required
               className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 
               bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
@@ -211,12 +246,12 @@ export default function SellPage() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
-              Price
-            </label>
+            <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Price</label>
             <input
               type="number"
               name="price"
+              value={formData.price}
+              onChange={handleChange}
               step="0.01"
               min="0"
               required
@@ -226,17 +261,30 @@ export default function SellPage() {
           </div>
 
           <div>
-            <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
-              Size
-            </label>
+            <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Size</label>
             <input
               type="text"
               name="size"
+              value={formData.size}
+              onChange={handleChange}
               required
               className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 
               bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
+        </div>
+
+        <div>
+          <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Brand</label>
+          <input
+            type="text"
+            name="brand"
+            value={formData.brand}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 
+            bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+          />
         </div>
 
         <button

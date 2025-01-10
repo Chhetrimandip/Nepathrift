@@ -1,4 +1,4 @@
-import { db } from './firebase';
+import { db } from './firebase-client';
 import { 
   collection, 
   doc, 
@@ -10,6 +10,7 @@ import {
   updateDoc,
   deleteDoc
 } from 'firebase/firestore';
+//dummy comment 
 
 // Export the db instance
 export { db };

@@ -2,12 +2,13 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import { 
-  getAuth, 
   onAuthStateChanged, 
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
-  User
+  User,
+  setPersistence,
+  browserLocalPersistence
 } from 'firebase/auth'
 import { useRouter } from 'next/navigation'
 import { auth } from '@/lib/firebase'
@@ -26,21 +27,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
-  const auth = getAuth()
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log('Auth state changed:', user ? {
+        uid: user.uid,
+        email: user.email,
+        emailVerified: user.emailVerified,
+        isAnonymous: user.isAnonymous
+      } : 'No user')
       setUser(user)
       setLoading(false)
     })
 
     return () => unsubscribe()
-  }, [auth])
+  }, [])
 
   const signIn = async (email: string, password: string) => {
     try {
       await signInWithEmailAndPassword(auth, email, password)
-      router.push('/dashboard')
+      
+      // Check if the email contains "4nepathrift" and redirect accordingly
+      if (email.includes("4nepathrift")) {
+        router.push('/admin')
+      } else {
+        router.push('/dashboard')
+      }
     } catch (error) {
       console.error('Error signing in:', error)
       throw error

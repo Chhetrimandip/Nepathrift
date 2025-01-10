@@ -97,5 +97,29 @@ export const sellersService = {
       id: docSnap.id,
       ...docSnap.data()
     } as Seller
+  },
+
+  async getSeller(id: string): Promise<Seller | null> {
+    try {
+      const sellerRef = doc(db, 'sellers', id)
+      const sellerSnap = await getDoc(sellerRef)
+      
+      if (!sellerSnap.exists()) {
+        return null
+      }
+      
+      return {
+        id: sellerSnap.id,
+        ...sellerSnap.data()
+      } as Seller
+    } catch (error) {
+      console.error('Error getting seller:', error)
+      throw error
+    }
+  },
+
+  async updateSeller(id: string, data: Partial<Seller>) {
+    const sellerRef = doc(db, 'sellers', id)
+    await updateDoc(sellerRef, data)
   }
 } 

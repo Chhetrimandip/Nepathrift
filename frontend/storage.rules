@@ -1,13 +1,48 @@
 rules_version = '2';
 service firebase.storage {
-  match /b/{bucket}/o {
-    match /products/{allPaths=**} {
-      allow read: if true;  // Anyone can view products
-      allow create: if request.auth != null  // Only authenticated users can upload
-                   && request.resource.size < 5 * 1024 * 1024  // Max 5MB per file
-                   && request.resource.contentType.matches('image/.*'); // Only images
-      allow delete: if request.auth != null 
-                   && request.auth.uid == resource.metadata.userId; // Only owner can delete
-    }
+  // Helper functions
+  function isAuthenticated() {
+    return request.auth != null;
+  }
+  
+  function isOwner(userId) {
+    return isAuthenticated() && request.auth.uid == userId;
+  }
+  
+  function isImageOrVideo() {
+    return request.resource.contentType.matches('image/.*') ||
+           request.resource.contentType.matches('video/.*');
+  }
+  
+  function isValidFileSize() {
+    return request.resource.size < 10 * 1024 * 1024; // 10MB for chat media
+  }
+
+  // Chat media - moved to top level for direct access
+  match /b/{bucket}/o/chat-media/{allPaths=**} {
+    allow read: if isAuthenticated();
+    allow write: if isAuthenticated() 
+                && isImageOrVideo() 
+                && isValidFileSize();
+  }
+
+  // Keep existing rules
+  match /b/{bucket}/o/users/{userId}/{allPaths=**} {
+    allow read: if isAuthenticated();
+    allow write: if isOwner(userId);
+  }
+
+  match /b/{bucket}/o/products/{productId}/{allPaths=**} {
+    allow read: if true;
+    allow write: if isAuthenticated();
+  }
+
+  match /b/{bucket}/o/screenshots/{userId}/{allPaths=**} {
+    allow read, write: if isAuthenticated();
+  }
+
+  match /b/{bucket}/o/{allPaths=**} {
+    allow read: if isAuthenticated();
+    allow write: if false;
   }
 } 

@@ -3,6 +3,11 @@
 import { useState } from "react"
 import { useAuth } from "@/contexts/AuthContext"
 import Link from "next/link"
+import { db } from '@/lib/firebase';
+import{ setDoc, doc } from 'firebase/firestore';
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
+import { registerUser } from '@/lib/auth';
 
 export default function SignUpPage() {
   const { signUp } = useAuth()
@@ -11,6 +16,7 @@ export default function SignUpPage() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -24,10 +30,15 @@ export default function SignUpPage() {
     setLoading(true)
 
     try {
-      await signUp(email, password)
+      await registerUser(email, password)
+      router.push('/auth/signin')
     } catch (error) {
-      console.error("Sign up error:", error)
-      setError("Failed to create an account.")
+      console.error('Registration failed:', error)
+      if (error.code === 'auth/email-already-in-use') {
+        setError('This email is already in use. Please use a different email.')
+      } else {
+        setError('Registration failed. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -129,4 +140,4 @@ export default function SignUpPage() {
       </div>
     </div>
   )
-} 
+}

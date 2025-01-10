@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation"
 import { useAuth } from "@/contexts/AuthContext"
 import Image from "next/image"
 import Link from "next/link"
-import { productsService, Product } from "@/lib/services/products"
+import { productsService } from "@/lib/services/products"
 import { Camera, X } from "lucide-react"
 import { Playfair_Display, Poppins } from "next/font/google"
 
@@ -33,49 +33,63 @@ const conditions = [
 ]
 
 export default function EditProductContent() {
+  const { id } = useParams()
   const router = useRouter()
-  const params = useParams()
   const { user } = useAuth()
+
+  const [product, setProduct] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [product, setProduct] = useState<Product | null>(null)
-  const [previews, setPreviews] = useState<string[]>([])
+  const [error, setError] = useState("")
   const [files, setFiles] = useState<File[]>([])
+  const [previews, setPreviews] = useState<string[]>([])
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    price: '',
+    category: '',
+    condition: '',
+    size: '',
+    brand: ''
+  })
 
   useEffect(() => {
-    const fetchProduct = async () => {
-      if (!user || !params.id) return
+    const loadProduct = async () => {
       try {
-        const fetchedProduct = await productsService.getById(params.id as string)
-        if (fetchedProduct) {
-          setProduct(fetchedProduct)
-          setPreviews(fetchedProduct.imageUrls || [])
+        const productData = await productsService.getProduct(id as string)
+        if (!productData) {
+          setError("Product not found")
+          return
         }
+        setProduct(productData)
+        setFormData({
+          name: productData.name,
+          description: productData.description,
+          price: productData.price.toString(),
+          category: productData.category,
+          condition: productData.condition,
+          size: productData.size || '',
+          brand: productData.brand || ''
+        })
+        setPreviews(productData.imageUrls || [])
       } catch (error) {
-        console.error('Error fetching product:', error)
+        console.error("Error loading product:", error)
+        setError("Failed to load product details")
       } finally {
         setLoading(false)
       }
     }
 
-    fetchProduct()
-  }, [params.id, user])
+    if (id) {
+      loadProduct()
+    }
+  }, [id])
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || [])
-    if (selectedFiles.length + previews.length > 4) {
-      alert('Maximum 4 images allowed')
-      return
-    }
-
     setFiles(prev => [...prev, ...selectedFiles])
     
-    selectedFiles.forEach(file => {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setPreviews(prev => [...prev, reader.result as string])
-      }
-      reader.readAsDataURL(file)
-    })
+    const newPreviews = selectedFiles.map(file => URL.createObjectURL(file))
+    setPreviews(prev => [...prev, ...newPreviews])
   }
 
   const removeImage = (index: number) => {
@@ -83,18 +97,27 @@ export default function EditProductContent() {
     setFiles(prev => prev.filter((_, i) => i !== index))
   }
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!product?.id) return
 
-    const formData = new FormData(e.currentTarget)
     const updatedProduct = {
       ...product,
-      name: formData.get('name') as string,
-      description: formData.get('description') as string,
-      price: parseFloat(formData.get('price') as string),
-      category: formData.get('category') as string,
-      condition: formData.get('condition') as string,
+      name: formData.name,
+      description: formData.description,
+      price: parseFloat(formData.price),
+      category: formData.category,
+      condition: formData.condition,
+      size: formData.size,
+      brand: formData.brand
     }
 
     try {
@@ -114,7 +137,7 @@ export default function EditProductContent() {
     )
   }
 
-  if (!product) {
+  if (error || !product) {
     return (
       <div className="text-center py-12">
         <h1 className="text-2xl font-bold mb-4">Product not found</h1>
@@ -177,7 +200,8 @@ export default function EditProductContent() {
           <input
             type="text"
             name="name"
-            defaultValue={product.name}
+            value={formData.name}
+            onChange={handleChange}
             required
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
               focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent
@@ -191,7 +215,8 @@ export default function EditProductContent() {
           </label>
           <textarea
             name="description"
-            defaultValue={product.description}
+            value={formData.description}
+            onChange={handleChange}
             required
             rows={4}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
@@ -207,7 +232,8 @@ export default function EditProductContent() {
           <input
             type="number"
             name="price"
-            defaultValue={product.price}
+            value={formData.price}
+            onChange={handleChange}
             required
             min="0"
             step="0.01"
@@ -223,7 +249,8 @@ export default function EditProductContent() {
           </label>
           <select
             name="category"
-            defaultValue={product.category}
+            value={formData.category}
+            onChange={handleChange}
             required
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
               focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent
@@ -241,7 +268,8 @@ export default function EditProductContent() {
           </label>
           <select
             name="condition"
-            defaultValue={product.condition}
+            value={formData.condition}
+            onChange={handleChange}
             required
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
               focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent
@@ -253,10 +281,42 @@ export default function EditProductContent() {
           </select>
         </div>
 
+        <div>
+          <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
+            Size
+          </label>
+          <input
+            type="text"
+            name="size"
+            value={formData.size}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
+              focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent
+              dark:bg-gray-700 dark:text-gray-100"
+          />
+        </div>
+
+        <div>
+          <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
+            Brand
+          </label>
+          <input
+            type="text"
+            name="brand"
+            value={formData.brand}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
+              focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent
+              dark:bg-gray-700 dark:text-gray-100"
+          />
+        </div>
+
         <button
           type="submit"
-          className="w-full bg-purple-600 text-white py-3 px-6 rounded-lg font-medium
-            hover:bg-purple-700 transition-colors"
+          className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 
+          transition-colors"
         >
           Update Product
         </button>

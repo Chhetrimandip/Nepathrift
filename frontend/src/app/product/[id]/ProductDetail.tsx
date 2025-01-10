@@ -4,8 +4,13 @@ import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Image from "next/image"
 import { useCart } from "@/contexts/CartContext"
-import { productsService, Product } from "@/lib/services/products"
-import Link from "next/link"
+import { useAuth } from "@/contexts/AuthContext"
+import { productsService } from "@/lib/services/products"
+import { reviewsService } from "@/lib/services/reviews"
+import { commentsService } from "@/lib/services/comments"
+import { sellersService } from "@/lib/services/sellers"
+import SellerReview from "@/app/components/SellerReview"
+import ProductComment from "@/app/components/ProductComment"
 import { Playfair_Display, Poppins } from "next/font/google"
 
 const playfair = Playfair_Display({ subsets: ["latin"] })
@@ -14,99 +19,137 @@ const poppins = Poppins({
   subsets: ["latin"] 
 })
 
-export default function ProductDetail(): JSX.Element {
-  const params = useParams()
+export default function ProductDetail() {
+  const { id } = useParams()
   const router = useRouter()
+  const { user } = useAuth()
   const { addToCart } = useCart()
-  const [product, setProduct] = useState<Product | null>(null)
-  const [similarProducts, setSimilarProducts] = useState<Product[]>([])
-  const [selectedSize, setSelectedSize] = useState("")
+  
+  const [product, setProduct] = useState<any>(null)
+  const [seller, setSeller] = useState<any>(null)
+  const [reviews, setReviews] = useState([])
+  const [comments, setComments] = useState([])
   const [loading, setLoading] = useState(true)
-  const [mainImage, setMainImage] = useState(0)
+  const [error, setError] = useState("")
+  const [selectedImage, setSelectedImage] = useState(0)
 
   useEffect(() => {
-    const fetchData = async () => {
+    const loadData = async () => {
       try {
-        const productData = await productsService.getById(params.id as string)
+        // Load product
+        const productData = await productsService.getProduct(id as string)
+        if (!productData) {
+          setError("Product not found")
+          return
+        }
         setProduct(productData)
 
-        if (productData) {
-          const allProducts = await productsService.getAll()
-          const similar = allProducts
-            .filter(p => 
-              p.category === productData.category && 
-              p.id !== productData.id
-            )
-            .slice(0, 4)
-          setSimilarProducts(similar)
-        }
+        // Load seller
+        const sellerData = await sellersService.getSeller(productData.sellerId)
+        setSeller(sellerData)
+
+        // Load reviews and comments
+        const [sellerReviews, productComments] = await Promise.all([
+          reviewsService.getSellerReviews(productData.sellerId),
+          commentsService.getProductComments(id as string)
+        ])
+        
+        setReviews(sellerReviews)
+        setComments(productComments)
       } catch (error) {
-        console.error("Error fetching product:", error)
+        console.error("Error loading product:", error)
+        setError("Failed to load product details")
       } finally {
         setLoading(false)
       }
     }
 
-    fetchData()
-  }, [params.id])
+    if (id) {
+      loadData()
+    }
+  }, [id])
 
   const handleAddToCart = () => {
-    if (!product) return
+    if (!product) return;
     addToCart({
-      id: product.id!,
+      id: product.id,
       name: product.name,
       price: product.price,
-      size: selectedSize,
+      imageUrl: product.imageUrls[0],
       quantity: 1,
-      imageUrl: product.imageUrls[0]
-    })
-    router.push('/cart')
+      sellerId: product.sellerId
+    });
+  };
+
+  const handleReviewSubmit = async (review: { rating: number; comment: string }) => {
+    if (!product || !user) return
+    const newReview = await reviewsService.create(product.sellerId, review)
+    setReviews(prev => [newReview, ...prev])
   }
+
+  const handleCommentSubmit = async (comment: string) => {
+    if (!product || !user) return
+    const newComment = await commentsService.create(product.id, comment)
+    setComments(prev => [newComment, ...prev])
+  }
+
+  const handleDeleteReview = async (reviewId: string) => {
+    try {
+      await reviewsService.delete(product.sellerId, reviewId);
+      setReviews(reviews.filter((review) => review.id !== reviewId));
+    } catch (error) {
+      console.error("Error deleting review:", error);
+    }
+  };
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8 flex justify-center">
+      <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
       </div>
     )
   }
 
-  if (!product) {
+  if (error || !product) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <h1 className="text-2xl font-bold mb-4">Product not found</h1>
-        <Link href="/shop" className="text-purple-600 hover:text-purple-800">
-          Return to Shop
-        </Link>
+      <div className="text-center py-12">
+        <p className="text-red-600">{error || "Product not found"}</p>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="grid md:grid-cols-2 gap-8">
+    <div className={`${poppins.className} max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8`}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Product Images */}
         <div className="space-y-4">
-          <div className="relative aspect-square">
+          {/* Main Image */}
+          <div className="relative aspect-square w-full overflow-hidden rounded-lg">
             <Image
-              src={product.imageUrls[mainImage] || "/placeholder.svg"}
+              src={product.imageUrls[selectedImage]}
               alt={product.name}
               fill
-              className="object-cover rounded-lg"
+              sizes="(max-width: 768px) 100vw, 50vw"
+              className="object-cover"
+              priority
             />
           </div>
+          
+          {/* Thumbnail Grid */}
           {product.imageUrls.length > 1 && (
             <div className="grid grid-cols-4 gap-2">
               {product.imageUrls.map((url, index) => (
                 <button
-                  key={url}
-                  onClick={() => setMainImage(index)}
-                  className={`relative aspect-square rounded-md overflow-hidden border-2 
-                    ${mainImage === index ? 'border-purple-600' : 'border-transparent'}`}
+                  key={index}
+                  onClick={() => setSelectedImage(index)}
+                  className={`relative aspect-square overflow-hidden rounded-lg border-2 
+                    ${selectedImage === index ? 'border-purple-500' : 'border-transparent'}`}
                 >
                   <Image
                     src={url}
-                    alt={`${product.name} ${index + 1}`}
+                    alt={`${product.name} - View ${index + 1}`}
                     fill
+                    sizes="(max-width: 768px) 25vw, 10vw"
                     className="object-cover"
                   />
                 </button>
@@ -115,86 +158,86 @@ export default function ProductDetail(): JSX.Element {
           )}
         </div>
 
-        <div>
-          <h1 className={`${playfair.className} text-3xl font-bold mb-4 text-gray-800 dark:text-gray-100`}>
-            {product.name}
-          </h1>
-          <p className={`${poppins.className} text-2xl text-purple-600 mb-4`}>
-            ${product.price.toFixed(2)}
-          </p>
-          
-          <div className="space-y-4 mb-6">
-            <p className="text-gray-600 dark:text-gray-300">{product.description}</p>
-            <p className={`${poppins.className}`}>
-              <span className="font-semibold">Condition:</span> {product.condition}
-            </p>
-            <p className={`${poppins.className}`}>
-              <span className="font-semibold">Brand:</span> {product.brand}
-            </p>
-          </div>
+        {/* Product Info */}
+        <div className="space-y-8">
+          <div>
+            <h1 className={`${playfair.className} text-3xl font-bold`}>
+              {product.name}
+            </h1>
+            <p className="mt-4 text-gray-600 dark:text-gray-300">{product.description}</p>
+            <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">
+              Rs {product.price.toFixed(2)}
+            </h3>
+            
+            <div className="mt-6 space-y-2 text-gray-700 dark:text-gray-300">
+              <p><span className="font-semibold">Condition:</span> {product.condition}</p>
+              <p><span className="font-semibold">Category:</span> {product.category}</p>
+              {product.brand && (
+                <p><span className="font-semibold">Brand:</span> {product.brand}</p>
+              )}
+              {product.size && (
+                <p><span className="font-semibold">Size:</span> {product.size}</p>
+              )}
+            </div>
 
-          <div className="mb-6">
-            <h3 className={`${poppins.className} font-semibold mb-2`}>Select Size</h3>
-            <select
-              value={selectedSize}
-              onChange={(e) => setSelectedSize(e.target.value)}
-              className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600"
-              required
-            >
-              <option value="" className="text-gray-500 dark:text-gray-400">Select Size</option>
-              <option value={product.size} className="text-gray-800 dark:text-gray-200">{product.size}</option>
-            </select>
-          </div>
-
-          <div className="space-x-4">
             <button
               onClick={handleAddToCart}
-              disabled={!selectedSize}
-              className={`${poppins.className} bg-purple-600 text-white px-6 py-2 rounded-full font-semibold 
-                hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed`}
+              className="mt-8 w-full bg-purple-600 text-white py-3 px-6 rounded-md 
+                hover:bg-purple-700 transition-colors"
             >
               Add to Cart
             </button>
-            <Link
-              href={`/checkout?productId=${product.id}`}
-              className={`${poppins.className} border-2 border-purple-600 text-purple-600 px-6 py-2 rounded-full 
-                font-semibold hover:bg-purple-600 hover:text-white transition-colors`}
-            >
-              Buy Now
-            </Link>
+          </div>
+
+          {/* Seller Info and Reviews */}
+          {seller && (
+            <div className="border-t pt-8">
+              <h2 className={`${playfair.className} text-xl font-bold mb-4`}>
+                Seller Information
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300">{seller.name}</p>
+              
+              <div className="mt-6">
+                <SellerReview 
+                  sellerId={product.sellerId} 
+                  reviews={reviews}
+                  onSubmit={handleReviewSubmit}
+                  onDelete={handleDeleteReview}
+                />
+              </div>
+
+              {reviews.length > 0 && (
+                <div className="mt-8">
+                  <h3 className="font-medium mb-4 text-gray-900 dark:text-white">Seller Reviews</h3>
+                  <div className="space-y-4">
+                    {reviews.map((review: any) => (
+                      <div key={review.id} className="border-t py-4">
+                        <div className="flex items-center">
+                          <span className="text-yellow-400">★</span>
+                          <span className="ml-1">{review.rating}</span>
+                        </div>
+                        <p className="mt-2 text-gray-600 dark:text-gray-300">{review.comment}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Product Comments */}
+          <div className="border-t pt-8">
+            <h2 className={`${playfair.className} text-xl font-bold mb-4`}>
+              Comments
+            </h2>
+            <ProductComment
+              productId={product.id}
+              onSubmit={handleCommentSubmit}
+              comments={comments}
+            />
           </div>
         </div>
       </div>
-
-      {similarProducts.length > 0 && (
-        <div className="mt-12">
-          <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-gray-100">Similar Items</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {similarProducts.map((product) => (
-              <Link
-                key={product.id}
-                href={`/product/${product.id}`}
-                className="group"
-              >
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="relative h-48">
-                    <Image
-                      src={product.imageUrls[0] || "/placeholder.svg"}
-                      alt={product.name}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform"
-                    />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-gray-800 dark:text-gray-100">{product.name}</h3>
-                    <p className="text-gray-700 dark:text-gray-300">${product.price.toFixed(2)}</p>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   )
-} 
+}

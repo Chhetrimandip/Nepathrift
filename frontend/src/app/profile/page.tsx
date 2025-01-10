@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { doc, getDoc, updateDoc } from 'firebase/firestore'
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
 import { db, storage } from '@/lib/firebase'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { sendEmailVerification } from 'firebase/auth'
 import Image from 'next/image'
 
 interface UserProfile {
@@ -33,39 +34,71 @@ export default function ProfilePage() {
   })
 
   useEffect(() => {
-    if (!user) {
-      router.push('/auth/signin')
-      return
-    }
-
     const loadProfile = async () => {
+      if (!user) return
+      setLoading(true)
       try {
+        console.log('Loading profile for:', user.uid)
+        
         const profileRef = doc(db, 'users', user.uid)
         const profileSnap = await getDoc(profileRef)
         
         if (profileSnap.exists()) {
-          setProfile(profileSnap.data() as UserProfile)
+          const data = profileSnap.data()
+          console.log('Profile data:', data)
+          setProfile(data as UserProfile)
         } else {
-          // Initialize with user's auth data
-          setProfile({
+          console.log('Creating new profile')
+          const initialProfile = {
             displayName: user.displayName || '',
             email: user.email || '',
             photoURL: user.photoURL || '',
             phoneNumber: '',
             address: '',
-            bio: ''
-          })
+            bio: '',
+            uid: user.uid,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }
+          await setDoc(profileRef, initialProfile)
+          setProfile(initialProfile)
         }
-      } catch (error) {
-        console.error('Error loading profile:', error)
-        setError('Failed to load profile')
+      } catch (error: any) {
+        console.error('Profile loading error:', error)
+        setError('Failed to load profile. Please try again.')
       } finally {
         setLoading(false)
       }
     }
+  
+    if (user) {
+      loadProfile()
+    }
+  }, [user])
 
-    loadProfile()
-  }, [user, router])
+  // ... rest of your component code
+
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!user) return
+    setSaving(true)
+
+    try {
+      const profileRef = doc(db, 'users', user.uid)
+      await updateDoc(profileRef, {
+        ...profile,
+        updatedAt: new Date().toISOString()
+      })
+      setError('')
+      router.push('/dashboard')
+    } catch (error) {
+      console.error('Error saving profile:', error)
+      setError('Failed to save profile')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -76,48 +109,27 @@ export default function ProfilePage() {
   }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !user) return
-
+    if (!user || !e.target.files?.[0]) return
+      router.push('/dashboard')
     try {
+      const file = e.target.files[0]
       const storageRef = ref(storage, `users/${user.uid}/profile-image`)
       await uploadBytes(storageRef, file)
       const photoURL = await getDownloadURL(storageRef)
+      
       setProfile(prev => ({ ...prev, photoURL }))
+      
+      const profileRef = doc(db, 'users', user.uid)
+      await updateDoc(profileRef, { 
+        photoURL,
+        updatedAt: new Date().toISOString()
+      })
     } catch (error) {
       console.error('Error uploading image:', error)
       setError('Failed to upload image')
     }
-  }
+    }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!user) {
-      router.push('/auth/signin')
-      return
-    }
-  
-    setSaving(true)
-    setError('')
-  
-    try {
-      const profileRef = doc(db, 'users', user.uid)
-      const updates = {
-        displayName: profile.displayName,
-        phoneNumber: profile.phoneNumber,
-        address: profile.address,
-        bio: profile.bio,
-        updatedAt: new Date().toISOString()
-      }
-      await updateDoc(profileRef, updates)
-      router.push('/dashboard')
-    } catch (error) {
-      console.error('Error saving profile:', error)
-      setError('Failed to save profile')
-    } finally {
-      setSaving(false)
-    }
-  }
 
   if (loading) {
     return (
@@ -127,9 +139,14 @@ export default function ProfilePage() {
     )
   }
 
+  if (!user) {
+    router.push('/auth/signin')
+    return null
+  }
+
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Profile Settings</h1>
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">Profile Settings</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
@@ -148,25 +165,26 @@ export default function ProfilePage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Profile Photo
             </label>
             <input
               type="file"
               accept="image/*"
               onChange={handleImageUpload}
-              className="mt-1 block w-full text-sm text-gray-500
+              className="mt-1 block w-full text-sm text-gray-500 dark:text-gray-400
                 file:mr-4 file:py-2 file:px-4
                 file:rounded-full file:border-0
                 file:text-sm file:font-semibold
                 file:bg-purple-50 file:text-purple-700
-                hover:file:bg-purple-100"
+                hover:file:bg-purple-100
+                dark:file:bg-gray-700 dark:file:text-purple-300"
             />
           </div>
         </div>
 
         <div>
-          <label htmlFor="displayName" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Display Name
           </label>
           <input
@@ -175,12 +193,14 @@ export default function ProfilePage() {
             name="displayName"
             value={profile.displayName}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+            className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 
+              shadow-sm focus:border-purple-500 focus:ring-purple-500 
+              dark:bg-gray-700 dark:text-white"
           />
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Email
           </label>
           <input
@@ -188,13 +208,15 @@ export default function ProfilePage() {
             id="email"
             name="email"
             value={profile.email}
-            readOnly
-            className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm"
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 
+              shadow-sm focus:border-purple-500 focus:ring-purple-500 
+              dark:bg-gray-700 dark:text-white"
           />
         </div>
 
         <div>
-          <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Phone Number
           </label>
           <input
@@ -203,12 +225,14 @@ export default function ProfilePage() {
             name="phoneNumber"
             value={profile.phoneNumber}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+            className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 
+              shadow-sm focus:border-purple-500 focus:ring-purple-500 
+              dark:bg-gray-700 dark:text-white"
           />
         </div>
 
         <div>
-          <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Address
           </label>
           <textarea
@@ -217,12 +241,14 @@ export default function ProfilePage() {
             rows={3}
             value={profile.address}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+            className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 
+              shadow-sm focus:border-purple-500 focus:ring-purple-500 
+              dark:bg-gray-700 dark:text-white"
           />
         </div>
 
         <div>
-          <label htmlFor="bio" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="bio" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Bio
           </label>
           <textarea
@@ -231,7 +257,9 @@ export default function ProfilePage() {
             rows={4}
             value={profile.bio}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+            className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 
+              shadow-sm focus:border-purple-500 focus:ring-purple-500 
+              dark:bg-gray-700 dark:text-white"
           />
         </div>
 
@@ -239,7 +267,10 @@ export default function ProfilePage() {
           <button
             type="submit"
             disabled={saving}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex justify-center py-2 px-4 border border-transparent 
+              rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 
+              hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 
+              focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? 'Saving...' : 'Save Changes'}
           </button>

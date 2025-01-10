@@ -1,30 +1,26 @@
 import { getFunctions, httpsCallable } from 'firebase/functions'
-import { doc, getDoc } from 'firebase/firestore'
+import { doc, getDoc, deleteDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { getAuth } from 'firebase/auth'
+import { addDoc, collection } from 'firebase/firestore'
 
 export interface Order {
   id: string;
-  userId: string;
-  items: {
-    productId: string;
-    quantity: number;
-    price: number;
-  }[];
-  total: number;
+  productId: string;
+  buyerId: string;
+  sellerId: string;
+  status: 'pending_confirmation' | 'confirmed' | 'sent' | 'received' | 'damaged' | 'cancelled';
+  price: number;
   shippingInfo: {
     fullName: string;
-    email: string;
-    phone: string;
     address: string;
-    city: string;
-    province: string;
+    phone: string;
   };
-  status: 'pending' | 'paid' | 'failed' | 'delivered';
-  paymentDetails?: {
-    method: 'esewa';
-    transactionId?: string;
-    refId?: string;
+  timeline: {
+    confirmedAt?: Date;
+    sentAt?: Date;
+    receivedAt?: Date;
+    cancelledAt?: Date;
   };
   createdAt: Date;
   updatedAt: Date;
@@ -37,17 +33,18 @@ export const ordersService = {
       throw new Error('Authentication required')
     }
 
-    const functions = getFunctions()
-    const createOrder = httpsCallable(functions, 'createOrder')
-    
     try {
-      const result = await createOrder(orderData)
-      return result.data
-    } catch (error: any) {
-      console.error('Order creation failed:', error)
-      if (error.code === 'unauthenticated') {
-        throw new Error('Authentication required')
+      const order = {
+        ...orderData,
+        status: 'pending_confirmation',
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
+      
+      const docRef = await addDoc(collection(db, 'orders'), order)
+      return { id: docRef.id, ...order }
+    } catch (error) {
+      console.error('Order creation failed:', error)
       throw new Error('Failed to create order')
     }
   },
@@ -85,5 +82,21 @@ export const ordersService = {
       throw new Error('Order not found')
     }
     return { id: docSnap.id, ...docSnap.data() }
+  },
+
+  delete: async (orderId: string) => {
+    const auth = getAuth()
+    if (!auth.currentUser) {
+      throw new Error('Authentication required')
+    }
+
+    try {
+      const orderRef = doc(db, 'orders', orderId)
+      await deleteDoc(orderRef)
+      return true
+    } catch (error) {
+      console.error('Order deletion failed:', error)
+      throw new Error('Failed to delete order')
+    }
   }
 } 

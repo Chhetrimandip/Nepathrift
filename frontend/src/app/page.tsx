@@ -22,9 +22,9 @@ export default function HomePage() {
     <>
       
       {/* Hero Section */}
-      <section className="relative min-h-[70vh] flex items-center bg-white dark:bg-gray-900">
+      <section className="relative min-h-[70vh] flex items-center bg-gradient-to-r from-rose-400 to-orange-300 dark:bg-gray-900">
         <div className="container mx-auto px-4 py-12">
-          <div className="max-w-2xl">
+          <div className="max-w-2xl backdrop-blur-sm bg-white/30 p-8 rounded-3xl">
             <h1 className={`${playfair.className} text-5xl md:text-6xl font-bold mb-6 text-gray-800 dark:text-gray-100`}>
               Discover Unique Fashion Treasures
             </h1>
@@ -33,8 +33,9 @@ export default function HomePage() {
             </p>
             <Link
               href="/shop"
-              className="bg-purple-600 text-white px-8 py-3 rounded-full text-lg font-semibold 
-                hover:bg-purple-700 transition-colors inline-flex items-center group"
+              className="bg-white/80 text-rose-400 px-8 py-3 rounded-full text-lg font-semibold 
+                hover:bg-white dark:bg-purple-600 dark:text-white dark:hover:bg-purple-700 
+                transition-all duration-300 inline-flex items-center group shadow-lg hover:shadow-xl"
             >
               Start Shopping
               <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>

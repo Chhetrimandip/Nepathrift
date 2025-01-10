@@ -9,9 +9,6 @@ import { Order } from '@/lib/services/checkout'
 import Link from 'next/link'
 import { format } from 'date-fns'
 
-export const runtime = 'edge'
-export const revalidate = 0
-
 export default function OrdersPage() {
   const { user } = useAuth()
   const router = useRouter()
