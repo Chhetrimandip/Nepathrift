@@ -17,6 +17,7 @@ import AdminChat from '@/components/AdminChat'
 import ProductManagement from '@/components/ProductManagement'
 import { format } from 'date-fns'
 import { ordersService } from '@/lib/services/orders'
+import { ORDER_STATUS, getStatusDisplay, getStatusColor } from '@/utils/orderStatus'
 
 const AdminPage = () => {
     const { user } = useAuth()
@@ -149,6 +150,19 @@ const AdminPage = () => {
         }
     };
 
+    const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
+        try {
+            const orderRef = doc(dbInstance, "orders", orderId);
+            await updateDoc(orderRef, {
+                status: newStatus,
+                [`timeline.${newStatus}At`]: new Date(),
+                updatedAt: new Date()
+            });
+        } catch (error) {
+            console.error('Error updating order status:', error);
+        }
+    };
+
     const filteredOrders = orders.filter(order => 
         orderStatus === 'all' || order.status === orderStatus
     )
@@ -229,12 +243,27 @@ const AdminPage = () => {
                             </button>
 
                             <td className="px-6 py-4">
-                                <button
-                                    onClick={() => handleDeleteOrder(order.id)}
-                                    className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                                >
-                                    Delete
-                                </button>
+                                <div className="space-y-2 flex flex-wrap gap-2">
+                                    {Object.entries(ORDER_STATUS).map(([key, status]) => (
+                                        <button
+                                            key={status}
+                                            onClick={() => handleUpdateOrderStatus(order.id, status)}
+                                            className={`px-3 py-1 rounded-md text-sm ${
+                                                order.status === status 
+                                                    ? 'bg-gray-800 text-white' 
+                                                    : getStatusColor(status)
+                                            }`}
+                                        >
+                                            {getStatusDisplay(status)}
+                                        </button>
+                                    ))}
+                                    <button
+                                        onClick={() => handleDeleteOrder(order.id)}
+                                        className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
                             </td>
                         </div>
                     ))}

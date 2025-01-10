@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import Image from 'next/image';
 
 const ProductManagement = () => {
@@ -11,8 +11,7 @@ const ProductManagement = () => {
     useEffect(() => {
         const fetchProducts = () => {
             const productsQuery = query(
-                collection(db, "products"),
-                where("status", "==", "available")
+                collection(db, "products")
             );
             
             const unsubscribe = onSnapshot(productsQuery, (querySnapshot) => {
@@ -31,12 +30,26 @@ const ProductManagement = () => {
 
     const handleToggleListing = async (productId, currentStatus) => {
         const productRef = doc(db, "products", productId);
-        await updateDoc(productRef, { status: currentStatus === 'available' ? 'unavailable' : 'available' });
+        await updateDoc(productRef, {
+            status: currentStatus === 'available' ? 'unavailable' : 'available',
+            updatedAt: new Date()
+        });
+    };
+
+    const handleDeleteProduct = async (productId) => {
+        if (window.confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
+            try {
+                await deleteDoc(doc(db, "products", productId));
+            } catch (error) {
+                console.error("Error deleting product:", error);
+                alert('Failed to delete product');
+            }
+        }
     };
 
     return (
         <div className="space-y-4">
-            <h2 className="text-lg font-semibold mb-4">Manage Products</h2>
+            <h2 className="text-xl font-semibold">Product Management</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {products.map((product) => (
                     <div key={product.id} className="border rounded-lg p-4 space-y-3">
@@ -61,17 +74,28 @@ const ProductManagement = () => {
                             <div>
                                 <h3 className="font-medium">{product.name}</h3>
                                 <p className="text-sm text-gray-500">Rs.{product.price}</p>
+                                <p className="text-sm text-gray-500">
+                                    Status: {product.status === 'available' ? 'Available' : 'Unavailable'}
+                                </p>
                             </div>
-                            <button 
-                                onClick={() => handleToggleListing(product.id, product.status)}
-                                className={`px-3 py-1 rounded-md ${
-                                    product.status === 'available' 
-                                    ? 'bg-red-500 text-white' 
-                                    : 'bg-green-500 text-white'
-                                }`}
-                            >
-                                {product.status === 'available' ? 'Unavailable' : 'Available'}
-                            </button>
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={() => handleToggleListing(product.id, product.status)}
+                                    className={`px-3 py-1 rounded-md ${
+                                        product.status === 'available' 
+                                        ? 'bg-yellow-500 text-white hover:bg-yellow-600' 
+                                        : 'bg-green-500 text-white hover:bg-green-600'
+                                    }`}
+                                >
+                                    {product.status === 'available' ? 'Mark Unavailable' : 'Mark Available'}
+                                </button>
+                                <button 
+                                    onClick={() => handleDeleteProduct(product.id)}
+                                    className="px-3 py-1 rounded-md bg-red-500 text-white hover:bg-red-600"
+                                >
+                                    Delete
+                                </button>
+                            </div>
                         </div>
                     </div>
                 ))}

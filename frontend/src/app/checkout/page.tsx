@@ -106,7 +106,7 @@ export default function CheckoutPage() {
                 required
                 value={shippingAddress.fullName}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                className="mt-1 block w-full rounded-md border-gray-300 text-black shadow-sm focus:border-purple-500 focus:ring-purple-500"
               />
             </div>
 
@@ -121,7 +121,7 @@ export default function CheckoutPage() {
                 required
                 value={shippingAddress.address}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-100"
+                className="mt-1 block w-full text-black rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-100"
               />
             </div>
 
@@ -137,12 +137,12 @@ export default function CheckoutPage() {
                   required
                   value={shippingAddress.city}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                  className="mt-1 block w-full text-black rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
                 />
               </div>
 
               <div>
-                <label htmlFor="state" className="block text-sm font-medium text-gray-900">
+                <label htmlFor="state" className="block text-sm font-medium text-gray-100">
                   State
                 </label>
                 <input
@@ -152,7 +152,7 @@ export default function CheckoutPage() {
                   required
                   value={shippingAddress.state}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                  className="mt-1 block w-full rounded-md text-black border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
                 />
               </div>
             </div>
@@ -169,7 +169,7 @@ export default function CheckoutPage() {
                   required
                   value={shippingAddress.postalCode}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                  className="mt-1 block w-full rounded-md text-black border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
                 />
               </div>
 
@@ -184,7 +184,7 @@ export default function CheckoutPage() {
                   required
                   value={shippingAddress.phone}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                  className="mt-1 block w-full rounded-md text-black border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
                 />
               </div>
             </div>
