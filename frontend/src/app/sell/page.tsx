@@ -150,6 +150,7 @@ export default function SellPage() {
                   src={url}
                   alt={`Product image ${index + 1}`}
                   fill
+                  sizes="(max-width: 768px) 25vw, 10vw"
                   className="object-cover rounded-lg"
                 />
                 <button

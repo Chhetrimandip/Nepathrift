@@ -56,12 +56,12 @@ export default function OrderConfirmationContent(): JSX.Element {
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
         <div className="text-center mb-8">
-          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+          <CheckCircle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
           <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">
-            Order Confirmed!
+            Payment Submitted!
           </h1>
           <p className="text-gray-600 dark:text-gray-300">
-            Thank you for your purchase. Your order has been confirmed.
+            Thank you for your payment. Your order is pending confirmation from our admin team.
           </p>
         </div>
 
@@ -73,16 +73,19 @@ export default function OrderConfirmationContent(): JSX.Element {
             Order ID: {order.id}
           </p>
           <p className="text-gray-600 dark:text-gray-300 mb-4">
-            Total: ${order.price.toFixed(2)}
+            Total: Rs.{order.price.toFixed(2)}
+          </p>
+          <p className="text-yellow-600 dark:text-yellow-400 mb-4">
+            Status: Pending Admin Confirmation
           </p>
         </div>
 
         <div className="mt-8 text-center">
           <Link
-            href="/orders"
+            href="/dashboard"
             className="text-purple-600 hover:text-purple-800 font-medium"
           >
-            View All Orders
+            View Dashboard
           </Link>
         </div>
       </div>

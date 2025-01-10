@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, query, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import Image from 'next/image';
 
 const ProductManagement = () => {
@@ -10,7 +10,11 @@ const ProductManagement = () => {
 
     useEffect(() => {
         const fetchProducts = () => {
-            const productsQuery = query(collection(db, "products"));
+            const productsQuery = query(
+                collection(db, "products"),
+                where("status", "==", "available")
+            );
+            
             const unsubscribe = onSnapshot(productsQuery, (querySnapshot) => {
                 const productsArray = [];
                 querySnapshot.forEach((doc) => {
@@ -36,20 +40,27 @@ const ProductManagement = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {products.map((product) => (
                     <div key={product.id} className="border rounded-lg p-4 space-y-3">
-                        {product.images && product.images.length > 0 && (
-                            <div className="relative h-48 w-full">
-                                <Image
-                                    src={product.images[0]}
-                                    alt={product.name}
-                                    fill
-                                    className="object-cover rounded-md"
-                                />
+                        {product.imageUrls && product.imageUrls.length > 0 && (
+                            <div className="space-y-2">
+                                <div className="grid grid-cols-2 gap-2">
+                                    {product.imageUrls.map((imageUrl, index) => (
+                                        <div key={index} className="relative h-32 w-full">
+                                            <Image
+                                                src={imageUrl}
+                                                alt={`${product.name} - Image ${index + 1}`}
+                                                fill
+                                                sizes="(max-width: 768px) 50vw, 25vw"
+                                                className="object-cover rounded-md"
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         )}
                         <div className="flex justify-between items-center">
                             <div>
                                 <h3 className="font-medium">{product.name}</h3>
-                                <p className="text-sm text-gray-500">${product.price}</p>
+                                <p className="text-sm text-gray-500">Rs.{product.price}</p>
                             </div>
                             <button 
                                 onClick={() => handleToggleListing(product.id, product.status)}

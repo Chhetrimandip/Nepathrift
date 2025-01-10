@@ -1,5 +1,5 @@
 import { getFunctions, httpsCallable } from 'firebase/functions'
-import { doc, getDoc } from 'firebase/firestore'
+import { doc, getDoc, deleteDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { getAuth } from 'firebase/auth'
 import { addDoc, collection } from 'firebase/firestore'
@@ -9,7 +9,7 @@ export interface Order {
   productId: string;
   buyerId: string;
   sellerId: string;
-  status: 'pending' | 'confirmed' | 'sent' | 'received' | 'damaged' | 'cancelled';
+  status: 'pending_confirmation' | 'confirmed' | 'sent' | 'received' | 'damaged' | 'cancelled';
   price: number;
   shippingInfo: {
     fullName: string;
@@ -36,7 +36,7 @@ export const ordersService = {
     try {
       const order = {
         ...orderData,
-        status: 'pending',
+        status: 'pending_confirmation',
         createdAt: new Date(),
         updatedAt: new Date()
       }
@@ -82,5 +82,21 @@ export const ordersService = {
       throw new Error('Order not found')
     }
     return { id: docSnap.id, ...docSnap.data() }
+  },
+
+  delete: async (orderId: string) => {
+    const auth = getAuth()
+    if (!auth.currentUser) {
+      throw new Error('Authentication required')
+    }
+
+    try {
+      const orderRef = doc(db, 'orders', orderId)
+      await deleteDoc(orderRef)
+      return true
+    } catch (error) {
+      console.error('Order deletion failed:', error)
+      throw new Error('Failed to delete order')
+    }
   }
 } 

@@ -123,28 +123,33 @@ export default function ProductDetail() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Product Images */}
         <div className="space-y-4">
-          <div className="aspect-w-1 aspect-h-1 w-full">
+          {/* Main Image */}
+          <div className="relative aspect-square w-full overflow-hidden rounded-lg">
             <Image
               src={product.imageUrls[selectedImage]}
               alt={product.name}
-              width={500}
-              height={500}
-              className="object-cover rounded-lg"
+              fill
+              sizes="(max-width: 768px) 100vw, 50vw"
+              className="object-cover"
+              priority
             />
           </div>
+          
+          {/* Thumbnail Grid */}
           {product.imageUrls.length > 1 && (
             <div className="grid grid-cols-4 gap-2">
-              {product.imageUrls.map((url: string, index: number) => (
+              {product.imageUrls.map((url, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
-                  className={`aspect-w-1 aspect-h-1 relative rounded-lg overflow-hidden 
-                    ${selectedImage === index ? 'ring-2 ring-purple-500' : ''}`}
+                  className={`relative aspect-square overflow-hidden rounded-lg border-2 
+                    ${selectedImage === index ? 'border-purple-500' : 'border-transparent'}`}
                 >
                   <Image
                     src={url}
-                    alt={`${product.name} - ${index + 1}`}
+                    alt={`${product.name} - View ${index + 1}`}
                     fill
+                    sizes="(max-width: 768px) 25vw, 10vw"
                     className="object-cover"
                   />
                 </button>

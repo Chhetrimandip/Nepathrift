@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import { productsService, Product } from '@/lib/services/products'
+import { collection, query, where, getDocs } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -25,7 +26,7 @@ const conditions = [
 ]
 
 export default function ShopPage() {
-  const [products, setProducts] = useState<Product[]>([])
+  const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [selectedCondition, setSelectedCondition] = useState('All')
@@ -33,19 +34,24 @@ export default function ShopPage() {
   const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
-    loadProducts()
-  }, [])
+    const fetchProducts = async () => {
+      const q = query(
+        collection(db, "products"),
+        where("status", "==", "available")  // Only fetch available products
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const productsData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      
+      setProducts(productsData);
+      setLoading(false);
+    };
 
-  const loadProducts = async () => {
-    try {
-      const allProducts = await productsService.getAll()
-      setProducts(allProducts)
-    } catch (error) {
-      console.error('Error loading products:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+    fetchProducts();
+  }, []);
 
   const filteredProducts = products.filter(product => {
     const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory
@@ -174,7 +180,7 @@ export default function ShopPage() {
                 </div>
                 <div className="p-4">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">{product.name}</h3>
-                  <p className="text-purple-600 dark:text-purple-400 font-bold">${product.price}</p>
+                  <p className="text-purple-600 dark:text-purple-400 font-bold">Rs. {product.price}</p>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{product.condition}</p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">{product.category}</p>
                 </div>

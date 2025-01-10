@@ -57,6 +57,25 @@ const Orders = () => {
         await updateDoc(orderRef, updateData);
     };
 
+    const getStatusDisplay = (status: string) => {
+        switch (status) {
+            case 'pending_confirmation':
+                return 'Pending Admin Confirmation';
+            case 'confirmed':
+                return 'Confirmed';
+            case 'sent':
+                return 'Sent';
+            case 'received':
+                return 'Received';
+            case 'damaged':
+                return 'Reported Damaged';
+            case 'cancelled':
+                return 'Cancelled';
+            default:
+                return status;
+        }
+    };
+
     return (
         <div className="space-y-8">
             {/* Seller Orders */}
@@ -68,7 +87,9 @@ const Orders = () => {
                             <div className="flex justify-between items-center">
                                 <div>
                                     <p className="font-medium">Order #{order.id.slice(0, 8)}</p>
-                                    <p className="text-sm text-gray-600">Status: {order.status}</p>
+                                    <p className="text-sm text-gray-600">
+                                        Status: {getStatusDisplay(order.status)}
+                                    </p>
                                 </div>
                                 {order.status === 'confirmed' && (
                                     <button
@@ -93,7 +114,9 @@ const Orders = () => {
                             <div className="flex justify-between items-center">
                                 <div>
                                     <p className="font-medium">Order #{order.id.slice(0, 8)}</p>
-                                    <p className="text-sm text-gray-600">Status: {order.status}</p>
+                                    <p className="text-sm text-gray-600">
+                                        Status: {getStatusDisplay(order.status)}
+                                    </p>
                                 </div>
                                 {order.status === 'sent' && (
                                     <div className="space-x-2">

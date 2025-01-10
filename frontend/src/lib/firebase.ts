@@ -39,10 +39,8 @@ try {
   console.error('Firebase initialization error:', error)
   throw new Error('Failed to initialize Firebase')
 }
-
 export const auth = getAuth(app)
 export const db = getFirestore(app)
 export const functions = getFunctions(app)
 export const storage = getStorage(app)
-
 export default app
